@@ -398,6 +398,130 @@ def draw_ingredient_panels(surface, drag_items):
                 flavor_text = small_font.render(flavor_names[item.item_key], True, BLACK)
                 surface.blit(flavor_text, (item.rect.right + 5, item.rect.centery - 8))
 
+# NOVÉ: Funkce pro návrat do menu
+def return_to_menu():
+    global STATE, drag_items, assembled_items, customer_queue, score, assembly_error, all_sprites
+    STATE = "menu"
+    drag_items.clear()
+    assembled_items.clear()
+    customer_queue.clear()
+    all_sprites.empty()
+    score = 0
+    assembly_error = False
+    # Zrušení časovače pro nové zákazníky
+    pygame.time.set_timer(pygame.USEREVENT + 2, 0)
+
+# NOVÉ: Funkce pro inicializaci hry
+def initialize_game():
+    global drag_items
+    drag_items.clear()
+    
+    # Kornouty ze spritesheet - VŠECHNY 4 TYPY
+    cone_types = ['classic', 'waffle', 'short', 'sugar']
+    for i, cone_type in enumerate(cone_types):
+        if cone_type in cone_images:
+            y_pos = 50 + (i * 60)
+            cone_item = DraggableItem(
+                cone_images[cone_type], 
+                f"cone_{cone_type}", 
+                (WIDTH - 290, y_pos),
+                item_key=cone_type,
+                item_type="cone"
+            )
+            drag_items.append(cone_item)
+    
+    # Kopečky ze spritesheet - VŠECH 9 PŘÍCHUTÍ
+    flavors_to_show = ['raspberry', 'pistachio', 'caramel', 'hazelnut', 'lemon', 'vanilla', 'peach', 'strawberry', 'chocolate']
+    for i, flavor in enumerate(flavors_to_show):
+        if flavor in scoop_images:
+            y_pos = 50 + (i * 50)
+            scoop_item = DraggableItem(
+                scoop_images[flavor], 
+                f"scoop_{flavor}", 
+                (WIDTH - 150, y_pos),
+                item_key=flavor,
+                item_type="scoop"
+            )
+            drag_items.append(scoop_item)
+
+# NOVÉ: Funkce pro zobrazení nápovědy ovládání
+def draw_controls_help(surface, state):
+    help_texts = []
+    
+    if state == "menu":
+        help_texts = [
+            "OVLÁDÁNÍ:",
+            "Enter - Spustit hru",
+            "Escape - Ukončit hru"
+        ]
+    elif state == "playing":
+        help_texts = [
+            "OVLÁDÁNÍ:",
+            "Enter - Dokončit objednávku",
+            "Mezerník - Reset sestavování",
+            "Escape - Návrat do menu"
+        ]
+    
+    # Posun do levého spodního rohu
+    y_start = HEIGHT - (len(help_texts) * 20) - 10
+    for i, text in enumerate(help_texts):
+        color = (100, 100, 100) if i == 0 else BLACK
+        help_surface = small_font.render(text, True, color)
+        surface.blit(help_surface, (10, y_start + i * 20))
+
+# NOVÉ: Funkce pro graficky zajímavé skóre
+def draw_score(surface, score):
+    # Pozadí pro skóre
+    score_bg_rect = pygame.Rect(15, ASSEMBLY_CENTER[1] - 50, 200, 60)
+    pygame.draw.rect(surface, (50, 50, 100), score_bg_rect, border_radius=10)
+    pygame.draw.rect(surface, (100, 150, 255), score_bg_rect, 3, border_radius=10)
+    
+    # Gradient efekt (simulace pomocí více obdélníků)
+    for i in range(5):
+        alpha = 50 - i * 10
+        gradient_rect = pygame.Rect(score_bg_rect.x + i, score_bg_rect.y + i, 
+                                   score_bg_rect.width - 2*i, score_bg_rect.height - 2*i)
+        gradient_surface = pygame.Surface((gradient_rect.width, gradient_rect.height), pygame.SRCALPHA)
+        gradient_surface.fill((100, 150, 255, alpha))
+        surface.blit(gradient_surface, gradient_rect.topleft)
+    
+    # Titulek "SKÓRE"
+    score_title = small_font.render("SKÓRE", True, (200, 220, 255))
+    title_x = score_bg_rect.x + (score_bg_rect.width - score_title.get_width()) // 2
+    surface.blit(score_title, (title_x, score_bg_rect.y + 8))
+    
+    # Hlavní číslo skóre - větší font
+    score_font = pygame.font.SysFont("arial", 28, bold=True)
+    score_text = score_font.render(str(score), True, (255, 255, 100))
+    score_x = score_bg_rect.x + (score_bg_rect.width - score_text.get_width()) // 2
+    surface.blit(score_text, (score_x, score_bg_rect.y + 28))
+    
+    # Dekorativní hvězdičky kolem skóre
+    star_positions = [
+        (score_bg_rect.x - 10, score_bg_rect.y + 10),
+        (score_bg_rect.right + 5, score_bg_rect.y + 15),
+        (score_bg_rect.x - 5, score_bg_rect.bottom - 15),
+        (score_bg_rect.right + 10, score_bg_rect.bottom - 10)
+    ]
+    
+    for pos in star_positions:
+        star_points = []
+        center_x, center_y = pos
+        outer_radius = 8
+        inner_radius = 4
+        
+        for i in range(10):
+            angle = i * 36 * 3.14159 / 180
+            if i % 2 == 0:
+                x = center_x + outer_radius * pygame.math.Vector2(1, 0).rotate_rad(angle).x
+                y = center_y + outer_radius * pygame.math.Vector2(1, 0).rotate_rad(angle).y
+            else:
+                x = center_x + inner_radius * pygame.math.Vector2(1, 0).rotate_rad(angle).x
+                y = center_y + inner_radius * pygame.math.Vector2(1, 0).rotate_rad(angle).y
+            star_points.append((x, y))
+        
+        pygame.draw.polygon(surface, (255, 255, 100), star_points)
+
 STATE = "intro"
 drag_items = []
 assembled_items = []
@@ -419,41 +543,29 @@ while running:
             
         elif event.type == pygame.USEREVENT + 2:
             add_new_customer()
-            
+        
+        # NOVÉ: Ovládání klávesnicí
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                if STATE == "playing":
+                    return_to_menu()
+                elif STATE == "menu":
+                    running = False
+            elif event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
+                if STATE == "menu":
+                    initialize_game()
+                    STATE = "playing"
+                    add_new_customer()
+                elif STATE == "playing" and assembled_items:
+                    complete_order()
+            elif event.key == pygame.K_SPACE:
+                if STATE == "playing":
+                    reset_assembly()
+                    
         elif STATE == "menu":
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if button_rect.collidepoint(event.pos):
-                    # NOVÉ: Inicializace ingrediencí s rozdělenými panely
-                    drag_items.clear()
-                    
-                    # Kornouty ze spritesheet - VŠECHNY 4 TYPY
-                    cone_types = ['classic', 'waffle', 'short', 'sugar']  # Všechny 4 kornouty
-                    for i, cone_type in enumerate(cone_types):
-                        if cone_type in cone_images:
-                            y_pos = 50 + (i * 60)  # Menší rozestup pro 4 kornouty
-                            cone_item = DraggableItem(
-                                cone_images[cone_type], 
-                                f"cone_{cone_type}", 
-                                (WIDTH - 290, y_pos),
-                                item_key=cone_type,
-                                item_type="cone"
-                            )
-                            drag_items.append(cone_item)
-                    
-                    # Kopečky ze spritesheet - VŠECH 9 PŘÍCHUTÍ
-                    flavors_to_show = ['raspberry', 'pistachio', 'caramel', 'hazelnut', 'lemon', 'vanilla', 'peach', 'strawberry', 'chocolate']  # Všech 9 příchutí
-                    for i, flavor in enumerate(flavors_to_show):
-                        if flavor in scoop_images:
-                            y_pos = 50 + (i * 50)  # Menší rozestup pro 9 kopečků
-                            scoop_item = DraggableItem(
-                                scoop_images[flavor], 
-                                f"scoop_{flavor}", 
-                                (WIDTH - 150, y_pos),
-                                item_key=flavor,
-                                item_type="scoop"
-                            )
-                            drag_items.append(scoop_item)
-                    
+                    initialize_game()
                     STATE = "playing"
                     add_new_customer()
                     
@@ -482,6 +594,9 @@ while running:
         button_text = font.render("HRÁT", True, BLACK)
         button_rect = button_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
         screen.blit(button_text, button_rect)
+        
+        # NOVÉ: Zobrazení nápovědy ovládání
+        draw_controls_help(screen, "menu")
 
     elif STATE == "playing":
         all_sprites.update()
@@ -523,8 +638,8 @@ while running:
 
         draw_buttons(screen, done_button, reset_button)
 
-        score_text = small_font.render(f"Skóre: {score}", True, BLACK)
-        screen.blit(score_text, (20, ASSEMBLY_CENTER[1] - 20))
+        # NOVÉ: Graficky zajímavé skóre
+        draw_score(screen, score)
 
         for customer in customer_queue:
             customer.draw_order(screen)
@@ -532,6 +647,9 @@ while running:
         if customer_queue:
             queue_text = small_font.render(f"Zákazníků ve frontě: {len(customer_queue)}", True, BLACK)
             screen.blit(queue_text, (20, 70))
+        
+        # NOVÉ: Zobrazení nápovědy ovládání
+        draw_controls_help(screen, "playing")
 
     pygame.display.flip()
 
