@@ -193,7 +193,7 @@ class DraggableItem:
                 self.rect.y = mouse_y + self.offset[1]
 
 class Customer(pygame.sprite.Sprite):
-    spacing = 80
+    spacing = 60  # NOVÉ: Zmenšené rozestupy mezi zákazníky (z 80 na 60)
     def __init__(self, customer_id):
         super().__init__()
         image_path = "icecream/assets/Customers/Customer1FF.png"
@@ -217,7 +217,7 @@ class Customer(pygame.sprite.Sprite):
             elif customer_id >= 2:
                 self.target_x = WIDTH // 2 - 100 - 3 * self.spacing - (customer_id - 1) * self.spacing
 
-        self.speed = 2
+        self.speed = 4  # NOVÉ: Zvýšená rychlost pohybu (z 2 na 4)
         self.arrived = False
         self.served = False
 
@@ -230,8 +230,8 @@ class Customer(pygame.sprite.Sprite):
             elif self.rect.centery < self.target_y:
                 self.rect.centery += self.speed
 
-            if (abs(self.rect.centerx - self.target_x) < 5 and 
-                abs(self.rect.centery - self.target_y) < 5):
+            if (abs(self.rect.centerx - self.target_x) < 3 and 
+                abs(self.rect.centery - self.target_y) < 3):  # NOVÉ: Zmenšená tolerance pro rychlejší "dorazení" (z 5 na 3)
                 self.arrived = True
                 if self.customer_id == 0:
                     self.show_order = True
@@ -247,8 +247,8 @@ class Customer(pygame.sprite.Sprite):
         else:
             self.target_x = WIDTH // 2 - 100 - 200 - (new_position - 1) * 60
 
-        if (abs(self.rect.centerx - self.target_x) > 5 or 
-            abs(self.rect.centery - self.target_y) > 5):
+        if (abs(self.rect.centerx - self.target_x) > 3 or 
+            abs(self.rect.centery - self.target_y) > 3):  # NOVÉ: Konzistentní tolerance (z 5 na 3)
             self.arrived = False
             self.show_order = False
 
@@ -340,7 +340,7 @@ def add_new_customer():
     customer_queue.append(new_customer)
     all_sprites.add(new_customer)
     next_customer_id += 1
-    next_customer_delay = random.randint(5000, 8000)
+    next_customer_delay = random.randint(3000, 5000)  # NOVÉ: Kratší intervaly mezi zákazníky (z 5000-8000 na 3000-5000)
     pygame.time.set_timer(pygame.USEREVENT + 2, next_customer_delay)
 
 def create_buttons():
@@ -415,9 +415,11 @@ def return_to_menu():
 
 # NOVÉ: Funkce pro inicializaci hry
 def initialize_game():
-    global drag_items, game_start_time
+    global drag_items, game_start_time, score, assembly_error
     drag_items.clear()
     game_start_time = pygame.time.get_ticks()  # Zaznamenání času začátku hry
+    score = 0  # NOVÉ: Vynulování skóre při každé nové hře
+    assembly_error = False  # Reset chybového stavu
     
     # Kornouty ze spritesheet - VŠECHNY 4 TYPY
     cone_types = ['classic', 'waffle', 'short', 'sugar']
