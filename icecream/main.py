@@ -185,9 +185,8 @@ class DraggableItem:
     def draw(self, surface):
         # NOVÉ: Aplikace animací při vykreslování
         if self.placed:
-            # Bounce efekt pro umístěné předměty
-            bounce_y = int(2 * pygame.math.Vector2(0, 1).rotate_rad(self.bounce_offset).y)
-            draw_pos = (self.rect.x, self.rect.y + bounce_y)
+            # UPRAVENO: Žádné animace pro umístěné předměty - jen standardní vykreslení
+            draw_pos = self.rect.topleft
         else:
             # Hover efekt pro neumístěné předměty
             if abs(self.hover_scale - 1.0) > 0.01:
@@ -436,7 +435,11 @@ def draw_ingredient_panels(surface, drag_items):
         if not item.placed:
             item.update_animation()  # Aktualizace animací
             item.draw(surface)
-            
+    
+    # UPRAVENO: Popisky se vykreslují POTÉ, co se vykreslí všechny ingredience
+    # Díky tomu se při drag & drop nepřesouvají názvy s obrázky
+    for item in drag_items:
+        if not item.placed and not item.dragging:  # Popisky jen pro ne-tažené ingredience
             # Popisky
             if item.item_type == "cone" and item.item_key:
                 cone_text = small_font.render(cone_names[item.item_key], True, BLACK)
@@ -760,7 +763,7 @@ while running:
         screen.blit(assembly_title, (assembly_zone.centerx - assembly_title.get_width() // 2, assembly_zone.top - 25))
 
         for item in assembled_items:
-            item.update_animation()  # NOVÉ: Aktualizace animací i pro umístěné předměty
+            # UPRAVENO: Žádné animace pro umístěné předměty
             item.draw(screen)
 
         # NOVÉ: Vykreslení rozdělených panelů
