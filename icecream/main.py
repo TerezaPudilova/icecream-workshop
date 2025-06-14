@@ -162,11 +162,11 @@ class Order:
         return f"{self.cone} kornout, {', '.join(self.scoops)}"
 
 def check_order_correctness():
-    """Kontroluje, zda sestavená zmrzlina odpovídá objednávce"""
+    """Kontroluje, zda sestavená zmrzlina odpovídá objednávce včetně pořadí příchutí"""
     if not customer.order or not assembled_items:
         return False
     
-    # Sestavení receptu z položek
+    # Sestavení receptu z položek v přesném pořadí
     recipe = {"cone": None, "scoops": []}
     for item in assembled_items:
         if item.label == "cone":
@@ -176,9 +176,9 @@ def check_order_correctness():
         elif item.label == "scoop2":
             recipe["scoops"].append("šmoulová")
     
-    # Kontrola správnosti
+    # Přísná kontrola - musí sedět kornout i přesné pořadí příchutí
     return (recipe['cone'] == customer.order.cone and 
-            sorted(recipe['scoops']) == sorted(customer.order.scoops))
+            recipe['scoops'] == customer.order.scoops)
 
 def reset_assembly():
     """Vyčistí místo sestavování a vrátí ingredience"""
