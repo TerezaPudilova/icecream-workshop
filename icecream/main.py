@@ -141,6 +141,7 @@ cone_names = {
 score = 0
 assembly_error = False
 error_timer = 0
+game_start_time = 0  # NOVÉ: Čas začátku hry
 
 class DraggableItem:
     def __init__(self, image, label, start_pos, item_key=None, item_type="scoop"):
@@ -400,7 +401,7 @@ def draw_ingredient_panels(surface, drag_items):
 
 # NOVÉ: Funkce pro návrat do menu
 def return_to_menu():
-    global STATE, drag_items, assembled_items, customer_queue, score, assembly_error, all_sprites
+    global STATE, drag_items, assembled_items, customer_queue, score, assembly_error, all_sprites, game_start_time
     STATE = "menu"
     drag_items.clear()
     assembled_items.clear()
@@ -408,13 +409,15 @@ def return_to_menu():
     all_sprites.empty()
     score = 0
     assembly_error = False
+    game_start_time = 0
     # Zrušení časovače pro nové zákazníky
     pygame.time.set_timer(pygame.USEREVENT + 2, 0)
 
 # NOVÉ: Funkce pro inicializaci hry
 def initialize_game():
-    global drag_items
+    global drag_items, game_start_time
     drag_items.clear()
+    game_start_time = pygame.time.get_ticks()  # Zaznamenání času začátku hry
     
     # Kornouty ze spritesheet - VŠECHNY 4 TYPY
     cone_types = ['classic', 'waffle', 'short', 'sugar']
@@ -443,6 +446,13 @@ def initialize_game():
                 item_type="scoop"
             )
             drag_items.append(scoop_item)
+
+# NOVÉ: Funkce pro výpočet zbývajícího času
+def get_time_left():
+    if game_start_time == 0:
+        return 60
+    elapsed = (pygame.time.get_ticks() - game_start_time) // 1000
+    return max(0, 60 - elapsed)
 
 # NOVÉ: Funkce pro zobrazení nápovědy ovládání
 def draw_controls_help(surface, state):
@@ -495,32 +505,96 @@ def draw_score(surface, score):
     score_text = score_font.render(str(score), True, (255, 255, 100))
     score_x = score_bg_rect.x + (score_bg_rect.width - score_text.get_width()) // 2
     surface.blit(score_text, (score_x, score_bg_rect.y + 28))
+
+# NOVÉ: Funkce pro zobrazení časomíry
+def draw_timer(surface, time_left):
+    # Pozadí pro časomíru
+    timer_bg_rect = pygame.Rect(15, ASSEMBLY_CENTER[1] - 130, 200, 60)
     
-    # Dekorativní hvězdičky kolem skóre
-    star_positions = [
-        (score_bg_rect.x - 10, score_bg_rect.y + 10),
-        (score_bg_rect.right + 5, score_bg_rect.y + 15),
-        (score_bg_rect.x - 5, score_bg_rect.bottom - 15),
-        (score_bg_rect.right + 10, score_bg_rect.bottom - 10)
-    ]
+    # Barva pozadí se mění podle zbývajícího času
+    if time_left > 30:
+        bg_color = (50, 100, 50)  # Zelená
+        border_color = (100, 255, 100)
+    elif time_left > 15:
+        bg_color = (100, 100, 50)  # Žlutá
+        border_color = (255, 255, 100)
+    else:
+        bg_color = (100, 50, 50)  # Červená
+        border_color = (255, 100, 100)
     
-    for pos in star_positions:
-        star_points = []
-        center_x, center_y = pos
-        outer_radius = 8
-        inner_radius = 4
-        
-        for i in range(10):
-            angle = i * 36 * 3.14159 / 180
-            if i % 2 == 0:
-                x = center_x + outer_radius * pygame.math.Vector2(1, 0).rotate_rad(angle).x
-                y = center_y + outer_radius * pygame.math.Vector2(1, 0).rotate_rad(angle).y
-            else:
-                x = center_x + inner_radius * pygame.math.Vector2(1, 0).rotate_rad(angle).x
-                y = center_y + inner_radius * pygame.math.Vector2(1, 0).rotate_rad(angle).y
-            star_points.append((x, y))
-        
-        pygame.draw.polygon(surface, (255, 255, 100), star_points)
+    pygame.draw.rect(surface, bg_color, timer_bg_rect, border_radius=10)
+    pygame.draw.rect(surface, border_color, timer_bg_rect, 3, border_radius=10)
+    
+    # Gradient efekt
+    for i in range(5):
+        alpha = 50 - i * 10
+        gradient_rect = pygame.Rect(timer_bg_rect.x + i, timer_bg_rect.y + i, 
+                                   timer_bg_rect.width - 2*i, timer_bg_rect.height - 2*i)
+        gradient_surface = pygame.Surface((gradient_rect.width, gradient_rect.height), pygame.SRCALPHA)
+        gradient_surface.fill((*border_color, alpha))
+        surface.blit(gradient_surface, gradient_rect.topleft)
+    
+    # Titulek "ČAS"
+    timer_title = small_font.render("ČAS", True, (200, 220, 255))
+    title_x = timer_bg_rect.x + (timer_bg_rect.width - timer_title.get_width()) // 2
+    surface.blit(timer_title, (title_x, timer_bg_rect.y + 8))
+    
+    # Zbývající čas - větší font
+    timer_font = pygame.font.SysFont("arial", 28, bold=True)
+    timer_text = timer_font.render(f"{time_left}s", True, (255, 255, 255))
+    timer_x = timer_bg_rect.x + (timer_bg_rect.width - timer_text.get_width()) // 2
+    surface.blit(timer_text, (timer_x, timer_bg_rect.y + 28))
+
+# NOVÉ: Funkce pro zobrazení finálního skóre
+def draw_final_score(surface, final_score):
+    # Pozadí pro finální skóre
+    overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 180))  # Průhledné černé pozadí
+    surface.blit(overlay, (0, 0))
+    
+    # Hlavní panel s finálním skóre
+    panel_width, panel_height = 400, 300
+    panel_rect = pygame.Rect((WIDTH - panel_width) // 2, (HEIGHT - panel_height) // 2, panel_width, panel_height)
+    pygame.draw.rect(surface, (30, 30, 60), panel_rect, border_radius=15)
+    pygame.draw.rect(surface, (100, 150, 255), panel_rect, 5, border_radius=15)
+    
+    # Gradient efekt pro panel
+    for i in range(8):
+        alpha = 60 - i * 7
+        gradient_rect = pygame.Rect(panel_rect.x + i, panel_rect.y + i, 
+                                   panel_rect.width - 2*i, panel_rect.height - 2*i)
+        gradient_surface = pygame.Surface((gradient_rect.width, gradient_rect.height), pygame.SRCALPHA)
+        gradient_surface.fill((100, 150, 255, alpha))
+        surface.blit(gradient_surface, gradient_rect.topleft)
+    
+    # Texty
+    title_font = pygame.font.SysFont("arial", 36, bold=True)
+    score_font = pygame.font.SysFont("arial", 48, bold=True)
+    instruction_font = pygame.font.SysFont("arial", 20)
+    
+    # "ČAS VYPRŠEL!"
+    title_text = title_font.render("ČAS VYPRŠEL!", True, (255, 100, 100))
+    title_x = panel_rect.x + (panel_rect.width - title_text.get_width()) // 2
+    surface.blit(title_text, (title_x, panel_rect.y + 40))
+    
+    # "FINÁLNÍ SKÓRE"
+    final_title = instruction_font.render("FINÁLNÍ SKÓRE:", True, (200, 220, 255))
+    final_title_x = panel_rect.x + (panel_rect.width - final_title.get_width()) // 2
+    surface.blit(final_title, (final_title_x, panel_rect.y + 100))
+    
+    # Samotné skóre - velké číslo
+    score_text = score_font.render(str(final_score), True, (255, 255, 100))
+    score_x = panel_rect.x + (panel_rect.width - score_text.get_width()) // 2
+    surface.blit(score_text, (score_x, panel_rect.y + 130))
+    
+    # Instrukce
+    instruction1 = instruction_font.render("Stiskněte Enter pro novou hru", True, (200, 220, 255))
+    instruction1_x = panel_rect.x + (panel_rect.width - instruction1.get_width()) // 2
+    surface.blit(instruction1, (instruction1_x, panel_rect.y + 210))
+    
+    instruction2 = instruction_font.render("nebo Escape pro návrat do menu", True, (200, 220, 255))
+    instruction2_x = panel_rect.x + (panel_rect.width - instruction2.get_width()) // 2
+    surface.blit(instruction2, (instruction2_x, panel_rect.y + 235))
 
 STATE = "intro"
 drag_items = []
@@ -547,12 +621,12 @@ while running:
         # NOVÉ: Ovládání klávesnicí
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                if STATE == "playing":
+                if STATE == "playing" or STATE == "game_over":
                     return_to_menu()
                 elif STATE == "menu":
                     running = False
             elif event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
-                if STATE == "menu":
+                if STATE == "menu" or STATE == "game_over":
                     initialize_game()
                     STATE = "playing"
                     add_new_customer()
@@ -599,6 +673,13 @@ while running:
         draw_controls_help(screen, "menu")
 
     elif STATE == "playing":
+        # NOVÉ: Kontrola časomíry
+        time_left = get_time_left()
+        if time_left <= 0:
+            STATE = "game_over"
+            # Zrušení časovače pro nové zákazníky
+            pygame.time.set_timer(pygame.USEREVENT + 2, 0)
+        
         all_sprites.update()
         all_sprites.draw(screen)
 
@@ -638,8 +719,9 @@ while running:
 
         draw_buttons(screen, done_button, reset_button)
 
-        # NOVÉ: Graficky zajímavé skóre
+        # NOVÉ: Graficky zajímavé skóre a časomíra
         draw_score(screen, score)
+        draw_timer(screen, time_left)
 
         for customer in customer_queue:
             customer.draw_order(screen)
@@ -650,6 +732,10 @@ while running:
         
         # NOVÉ: Zobrazení nápovědy ovládání
         draw_controls_help(screen, "playing")
+    
+    elif STATE == "game_over":
+        # NOVÉ: Obrazovka s finálním skóre
+        draw_final_score(screen, score)
 
     pygame.display.flip()
 
