@@ -155,14 +155,59 @@ class DraggableItem:
         self.dragging = False
         self.offset = (0, 0)
         self.placed = False
+        
+        # NOVÉ: Animace
+        self.hover_scale = 1.0
+        self.target_scale = 1.0
+        self.bounce_offset = 0
+        self.bounce_speed = 0.1
+
+    def update_animation(self):
+        """NOVÉ: Aktualizuje animace pro předmět"""
+        mouse_pos = pygame.mouse.get_pos()
+        
+        # Hover efekt - zvětšení při najetí myší
+        if self.rect.collidepoint(mouse_pos) and not self.placed:
+            self.target_scale = 1.2
+        else:
+            self.target_scale = 1.0
+        
+        # Plynulé přechody měřítka
+        scale_diff = self.target_scale - self.hover_scale
+        self.hover_scale += scale_diff * 0.15
+        
+        # Bounce animace pro umístěné předměty
+        if self.placed:
+            self.bounce_offset += self.bounce_speed
+            if self.bounce_offset > 6.28:  # 2*π
+                self.bounce_offset = 0
 
     def draw(self, surface):
-        surface.blit(self.image, self.rect.topleft)
+        # NOVÉ: Aplikace animací při vykreslování
+        if self.placed:
+            # Bounce efekt pro umístěné předměty
+            bounce_y = int(2 * pygame.math.Vector2(0, 1).rotate_rad(self.bounce_offset).y)
+            draw_pos = (self.rect.x, self.rect.y + bounce_y)
+        else:
+            # Hover efekt pro neumístěné předměty
+            if abs(self.hover_scale - 1.0) > 0.01:
+                scaled_size = int(48 * self.hover_scale)
+                scaled_image = pygame.transform.scale(self.original_image, (scaled_size, scaled_size))
+                # Vycentrování zvětšeného obrázku
+                center_offset = (48 - scaled_size) // 2
+                draw_pos = (self.rect.x + center_offset, self.rect.y + center_offset)
+                surface.blit(scaled_image, draw_pos)
+                return
+            else:
+                draw_pos = self.rect.topleft
+        
+        surface.blit(self.image, draw_pos)
 
     def reset_position(self):
         self.rect.topleft = self.start_pos
         self.placed = False
         self.dragging = False
+        self.bounce_offset = 0  # NOVÉ: Reset animace
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -386,9 +431,10 @@ def draw_ingredient_panels(surface, drag_items):
     scoop_title = section_font.render("KOPEČKY", True, (150, 100, 50))
     surface.blit(scoop_title, (scoop_panel_rect.x + 10, scoop_panel_rect.y + 10))
     
-    # Vykreslení ingrediencí
+    # NOVÉ: Aktualizace a vykreslení ingrediencí s animacemi
     for item in drag_items:
         if not item.placed:
+            item.update_animation()  # Aktualizace animací
             item.draw(surface)
             
             # Popisky
@@ -714,6 +760,7 @@ while running:
         screen.blit(assembly_title, (assembly_zone.centerx - assembly_title.get_width() // 2, assembly_zone.top - 25))
 
         for item in assembled_items:
+            item.update_animation()  # NOVÉ: Aktualizace animací i pro umístěné předměty
             item.draw(screen)
 
         # NOVÉ: Vykreslení rozdělených panelů
