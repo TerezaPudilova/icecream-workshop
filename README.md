@@ -22,14 +22,20 @@ cd icecream-game
 
 1. Vytvoř a aktivuj virtuální prostředí
 
+```bash
 python -m venv .venv
 source .venv/bin/activate   # na Windows: .venv\Scripts\activate
+```
 
 2. Nainstaluj závilosti
 
+```bash
 pip install -r requirements.txt
+```
 
 3. spusť hru
 
+```bash
 python -m icecream.main
+```
 
