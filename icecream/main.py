@@ -24,6 +24,8 @@ RED = (150, 0, 0)
 LIGHT_GREEN = (200, 255, 200)
 LIGHT_RED = (255, 200, 200)
 LIGHT_GRAY = (230, 230, 230)
+ASSEMBLY_NORMAL = (240, 240, 255)
+ASSEMBLY_ERROR = (255, 200, 200)
 
 # Fonty
 font = pygame.font.SysFont("arial", 48)
@@ -36,6 +38,8 @@ scoop1_img = pygame.image.load("icecream/assets/Icecream/cokoladova.png").conver
 scoop2_img = pygame.image.load("icecream/assets/Icecream/smoulova.png").convert_alpha()
 
 score = 0
+assembly_error = False
+error_timer = 0
 
 class DraggableItem:
     def __init__(self, image, label, start_pos):
@@ -182,24 +186,28 @@ def check_order_correctness():
 
 def reset_assembly():
     """Vyčistí místo sestavování a vrátí ingredience"""
-    global assembled_items
+    global assembled_items, assembly_error
     for item in assembled_items:
         item.reset_position()
     assembled_items.clear()
+    assembly_error = False
 
 def complete_order():
     """Dokončí objednávku a vytvoří novou"""
-    global score
+    global score, assembly_error, error_timer
     
     if check_order_correctness():
         print("✅ Objednávka správná!")
         score += 1
         player.deliver_to(customer)
         reset_assembly()
+        assembly_error = False
         # Vytvoření nové objednávky po krátké pauze
         pygame.time.set_timer(pygame.USEREVENT + 1, 2000)  # 2 sekundy
     else:
         print("❌ Objednávka nesedí. Zkus to znovu.")
+        assembly_error = True
+        error_timer = pygame.time.get_ticks()
 
 # Tlačítka
 def create_buttons():
@@ -300,10 +308,34 @@ while running:
 
         # Vykreslení oblasti pro sestavování zmrzliny
         assembly_zone = pygame.Rect(ASSEMBLY_CENTER[0] - 50, ASSEMBLY_CENTER[1] - 150, 100, 200)
-        pygame.draw.rect(screen, (240, 240, 255), assembly_zone, border_radius=10)
-        pygame.draw.rect(screen, (100, 100, 200), assembly_zone, 3, border_radius=10)
         
-        assembly_title = small_font.render("MÍSTO PRO SESTAVOVÁNÍ", True, (50, 50, 150))
+        # Změna barvy podle stavu chyby
+        if assembly_error:
+            # Kontrola, zda má chyba ještě blikat (3 sekundy)
+            if pygame.time.get_ticks() - error_timer < 3000:
+                # Blikání každých 300ms
+                if (pygame.time.get_ticks() - error_timer) // 300 % 2 == 0:
+                    assembly_color = ASSEMBLY_ERROR
+                    border_color = RED
+                else:
+                    assembly_color = ASSEMBLY_NORMAL
+                    border_color = (100, 100, 200)
+            else:
+                assembly_error = False
+                assembly_color = ASSEMBLY_NORMAL
+                border_color = (100, 100, 200)
+        else:
+            assembly_color = ASSEMBLY_NORMAL
+            border_color = (100, 100, 200)
+        
+        pygame.draw.rect(screen, assembly_color, assembly_zone, border_radius=10)
+        pygame.draw.rect(screen, border_color, assembly_zone, 3, border_radius=10)
+        
+        # Název oblasti
+        if assembly_error and pygame.time.get_ticks() - error_timer < 3000:
+            assembly_title = small_font.render("CHYBNÁ OBJEDNÁVKA!", True, RED)
+        else:
+            assembly_title = small_font.render("MÍSTO PRO SESTAVOVÁNÍ", True, (50, 50, 150))
         screen.blit(assembly_title, (assembly_zone.centerx - assembly_title.get_width() // 2, assembly_zone.top - 25))
 
         # Vykreslení sestavených ingrediencí
