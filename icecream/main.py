@@ -550,8 +550,10 @@ def draw_controls_help(surface, state):
     # Posun do levého spodního rohu
     y_start = HEIGHT - (len(help_texts) * 20) - 10
     for i, text in enumerate(help_texts):
-        color = (100, 100, 100) if i == 0 else BLACK
-        help_surface = small_font.render(text, True, color)
+        if i == 0:  # UPRAVENO: Nadpis "OVLÁDÁNÍ" černě a tučně
+            help_surface = section_font.render(text, True, BLACK)  # Tučný font
+        else:
+            help_surface = small_font.render(text, True, BLACK)
         surface.blit(help_surface, (10, y_start + i * 20))
 
 # NOVÉ: Funkce pro graficky zajímavé skóre
@@ -804,29 +806,31 @@ while running:
         # Vykreslení oblasti pro sestavování
         assembly_zone = pygame.Rect(ASSEMBLY_CENTER[0] - 50, ASSEMBLY_CENTER[1] - 150, 100, 200)
         
+        # UPRAVENO: Design stejný jako u panelů ingrediencí
         if assembly_error:
             if pygame.time.get_ticks() - error_timer < 3000:
                 if (pygame.time.get_ticks() - error_timer) // 300 % 2 == 0:
                     assembly_color = ASSEMBLY_ERROR
                     border_color = RED
                 else:
-                    assembly_color = ASSEMBLY_NORMAL
-                    border_color = (100, 100, 200)
+                    assembly_color = PANEL_COLOR  # Stejná barva jako panely
+                    border_color = BLACK  # Černý rámeček
             else:
                 assembly_error = False
-                assembly_color = ASSEMBLY_NORMAL
-                border_color = (100, 100, 200)
+                assembly_color = PANEL_COLOR  # Stejná barva jako panely
+                border_color = BLACK  # Černý rámeček
         else:
-            assembly_color = ASSEMBLY_NORMAL
-            border_color = (100, 100, 200)
+            assembly_color = PANEL_COLOR  # Stejná barva jako panely
+            border_color = BLACK  # Černý rámeček
         
-        pygame.draw.rect(screen, assembly_color, assembly_zone, border_radius=10)
-        pygame.draw.rect(screen, border_color, assembly_zone, 3, border_radius=10)
+        pygame.draw.rect(screen, assembly_color, assembly_zone, border_radius=8)  # Stejné border_radius jako panely
+        pygame.draw.rect(screen, border_color, assembly_zone, 2, border_radius=8)  # Stejná tloušťka jako panely
         
         if assembly_error and pygame.time.get_ticks() - error_timer < 3000:
             assembly_title = small_font.render("CHYBNÁ OBJEDNÁVKA!", True, RED)
         else:
-            assembly_title = small_font.render("MÍSTO PRO SESTAVOVÁNÍ", True, (50, 50, 150))
+            # UPRAVENO: Nový text a černá barva
+            assembly_title = small_font.render("SESTAV OBJEDNÁVKU", True, BLACK)
         screen.blit(assembly_title, (assembly_zone.centerx - assembly_title.get_width() // 2, assembly_zone.top - 25))
 
         for item in assembled_items:
