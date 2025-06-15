@@ -6,6 +6,9 @@ import math
 # Inicializace Pygame
 pygame.init()
 
+# OPRAVA: Global deklarace na začátku souboru
+global final_score
+
 # Nastavení velikosti okna - zvětšeno pro lepší rozhraní
 WIDTH, HEIGHT = 1200, 700  
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -52,19 +55,26 @@ def load_icecream_decoration():
         icecream_width = sheet_width // 5
         icecream_height = sheet_height
         
-        # NOVÉ: Padding pro lepší oříznutí (odstraní přečuhující části)
-        padding_x = int(icecream_width * 0.05)  # 5% padding zleva a zprava
-        padding_y = int(icecream_height * 0.02)  # 2% padding shora a zdola
-        
         icecreams = []
         
         # UPRAVENO: Rozřezání na 4 zmrzliny (vynecháváme první - nejvíc nalevo)
         for i in range(1, 5):  # Začínáme od indexu 1 místo 0
-            # NOVÉ: Aplikace paddingu pro lepší oříznutí
+            # NOVÉ: Individuální padding pro každou zmrzlinu
+            if i == 1:  # První zmrzlina v našem seznamu (druhá v originále)
+                # Více oříznutí zleva kvůli viditelné části předchozí zmrzliny
+                padding_left = int(icecream_width * 0.15)  # Výrazně více zleva
+                padding_right = int(icecream_width * 0.05)  # Standardně zprava
+            else:
+                # Ostatní zmrzliny - standardní padding
+                padding_left = int(icecream_width * 0.05)   # Standardní zleva
+                padding_right = int(icecream_width * 0.05)  # Standardní zprava
+            
+            padding_y = int(icecream_height * 0.02)  # 2% padding shora a zdola
+            
             rect = pygame.Rect(
-                i * icecream_width + padding_x, 
+                i * icecream_width + padding_left, 
                 padding_y, 
-                icecream_width - 2 * padding_x, 
+                icecream_width - padding_left - padding_right, 
                 icecream_height - 2 * padding_y
             )
             icecream_surface = icecream_sheet.subsurface(rect)
@@ -312,14 +322,53 @@ def load_scoop_spritesheet():
         
         scoops = {}
         scoop_names = [
-            ['raspberry', 'pistachio', 'caramel'],
-            ['hazelnut', 'lemon', 'vanilla'], 
-            ['peach', 'strawberry', 'chocolate']
+            ['raspberry', 'pistachio', 'caramel'],     # řádek 0: pozice 0, 1, 2
+            ['hazelnut', 'lemon', 'vanilla'],          # řádek 1: pozice 3, 4, 5  
+            ['peach', 'strawberry', 'chocolate']       # řádek 2: pozice 6, 7, 8
         ]
         
         for row in range(3):
             for col in range(3):
-                rect = pygame.Rect(col * scoop_width, row * scoop_height, scoop_width, scoop_height)
+                # Výpočet pozice kopečku (0-8)
+                position = row * 3 + col
+                
+                # NOVÉ: Individuální oříznutí pro každý kopeček
+                if position in [1, 4, 7]:  # pistachio (1), lemon (4), strawberry (7) - střední sloupec
+                    # Střední kopečky - více oříznutí zprava kvůli přečuhování následujícího kopečku
+                    padding_left = int(scoop_width * 0.06)
+                    padding_right = int(scoop_width * 0.14)  # Výrazně více zprava
+                    padding_y = int(scoop_height * 0.04)
+                    
+                    rect = pygame.Rect(
+                        col * scoop_width + padding_left, 
+                        row * scoop_height + padding_y, 
+                        scoop_width - padding_left - padding_right, 
+                        scoop_height - 2 * padding_y
+                    )
+                elif position in [2, 5, 8]:  # caramel (2), vanilla (5), chocolate (8) - pravý sloupec
+                    # UPRAVENO: Pravé kopečky - méně oříznutí zleva, zachováme více z levé strany
+                    padding_left = int(scoop_width * 0.02)   # Minimální zleva
+                    padding_right = int(scoop_width * 0.08)  # Standardní zprava
+                    padding_y = int(scoop_height * 0.04)
+                    
+                    rect = pygame.Rect(
+                        col * scoop_width + padding_left, 
+                        row * scoop_height + padding_y, 
+                        scoop_width - padding_left - padding_right, 
+                        scoop_height - 2 * padding_y
+                    )
+                else:  # position in [0, 3, 6] - raspberry, hazelnut, peach - levý sloupec
+                    # Levé kopečky - standardní symetrické oříznutí
+                    padding_x = int(scoop_width * 0.05)
+                    padding_y = int(scoop_height * 0.02)
+                    
+                    rect = pygame.Rect(
+                        col * scoop_width + padding_x, 
+                        row * scoop_height + padding_y, 
+                        scoop_width - 2 * padding_x, 
+                        scoop_height - 2 * padding_y
+                    )
+                
                 scoop_surface = spritesheet.subsurface(rect)
                 scoop_name = scoop_names[row][col]
                 scoops[scoop_name] = scoop_surface
@@ -444,6 +493,7 @@ assembly_error = False
 error_timer = 0
 game_start_time = 0  # NOVÉ: Čas začátku hry
 button_rect_global = pygame.Rect(0, 0, 0, 0)  # Globální proměnná pro tlačítko
+final_score = 0  # NOVÉ: Proměnná pro uložení finálního skóre
 
 class DraggableItem:
     def __init__(self, image, label, start_pos, item_key=None, item_type="scoop"):
@@ -542,8 +592,21 @@ class Customer(pygame.sprite.Sprite):
     spacing = 60  # NOVÉ: Zmenšené rozestupy mezi zákazníky (z 80 na 60)
     def __init__(self, customer_id):
         super().__init__()
-        image_path = "icecream/assets/Customers/Customer1FF.png"
-        self.image = pygame.image.load(image_path).convert_alpha()
+        try:
+            image_path = "icecream/assets/Customers/Customer1FF.png"
+            self.image = pygame.image.load(image_path).convert_alpha()
+        except pygame.error:
+            print("Nepodařilo se načíst obrázek zákazníka, používám placeholder...")
+            # Vytvoření placeholder zákazníka
+            self.image = pygame.Surface((64, 96), pygame.SRCALPHA)
+            # Hlava
+            pygame.draw.circle(self.image, (255, 220, 177), (32, 20), 15)
+            # Tělo
+            pygame.draw.rect(self.image, (100, 100, 200), (20, 35, 24, 40))
+            # Nohy
+            pygame.draw.rect(self.image, (50, 50, 100), (24, 75, 6, 20))
+            pygame.draw.rect(self.image, (50, 50, 100), (34, 75, 6, 20))
+        
         self.rect = self.image.get_rect()
 
         self.customer_id = customer_id
@@ -750,27 +813,65 @@ def draw_ingredient_panels(surface, drag_items):
                 flavor_text = small_font.render(flavor_names[item.item_key], True, BLACK)
                 surface.blit(flavor_text, (item.rect.right + 5, item.rect.centery - 8))
 
-# NOVÉ: Funkce pro návrat do menu
+# NOVÉ: Funkce pro návrat do menu s kompletním resetem
 def return_to_menu():
-    global STATE, drag_items, assembled_items, customer_queue, score, assembly_error, all_sprites, game_start_time
+    global STATE, drag_items, assembled_items, customer_queue, score, assembly_error, all_sprites, game_start_time, error_timer, next_customer_id, final_score
     STATE = "menu"
+    
+    # NOVÉ: Kompletní reset všech herních prvků
     drag_items.clear()
     assembled_items.clear()
     customer_queue.clear()
     all_sprites.empty()
+    
+    # NOVÉ: Reset všech herních proměnných
     score = 0
+    final_score = 0  # NOVÉ: Reset i finálního skóre
     assembly_error = False
+    error_timer = 0
     game_start_time = 0
+    next_customer_id = 0
+    
     # Zrušení časovače pro nové zákazníky
     pygame.time.set_timer(pygame.USEREVENT + 2, 0)
 
-# NOVÉ: Funkce pro inicializaci hry
+# NOVÉ: Funkce pro kompletní reset hry při game over
+def reset_game_completely():
+    """Kompletně resetuje hru pro nové kolo"""
+    global drag_items, assembled_items, customer_queue, score, assembly_error, all_sprites, game_start_time, error_timer, next_customer_id
+    
+    # Reset všech seznamů a objektů
+    for item in assembled_items:
+        item.reset_position()
+    assembled_items.clear()
+    
+    for item in drag_items:
+        item.reset_position()
+    
+    customer_queue.clear()
+    all_sprites.empty()
+    
+    # Reset všech proměnných KROMĚ final_score
+    score = 0
+    assembly_error = False
+    error_timer = 0
+    game_start_time = 0
+    next_customer_id = 0
+    
+    # Zrušení všech časovačů
+    pygame.time.set_timer(pygame.USEREVENT + 2, 0)
+
+# NOVÉ: Funkce pro inicializaci hry s kompletním resetem
 def initialize_game():
-    global drag_items, game_start_time, score, assembly_error
+    global drag_items, game_start_time, score, assembly_error, assembled_items, customer_queue, all_sprites, error_timer, next_customer_id
+    
+    # NOVÉ: Kompletní vyčištění před novým kolem
+    reset_game_completely()
+    
+    # Vyčištění seznamu drag_items před novým načtením
     drag_items.clear()
+    
     game_start_time = pygame.time.get_ticks()  # Zaznamenání času začátku hry
-    score = 0  # NOVÉ: Vynulování skóre při každé nové hře
-    assembly_error = False  # Reset chybového stavu
     
     # Kornouty ze spritesheet - VŠECHNY 4 TYPY
     cone_types = ['classic', 'waffle', 'short', 'sugar']
@@ -1028,9 +1129,11 @@ while running:
         # NOVÉ: Kontrola časomíry
         time_left = get_time_left()
         if time_left <= 0:
+            # NOVÉ: Uložení finálního skóre před resetem
+            final_score = score
+            # NOVÉ: Kompletní reset při konci kola
+            reset_game_completely()
             STATE = "game_over"
-            # Zrušení časovače pro nové zákazníky
-            pygame.time.set_timer(pygame.USEREVENT + 2, 0)
         
         all_sprites.update()
         all_sprites.draw(screen)
@@ -1089,8 +1192,8 @@ while running:
         draw_controls_help(screen, "playing")
     
     elif STATE == "game_over":
-        # NOVÉ: Obrazovka s finálním skóre
-        draw_final_score(screen, score)
+        # NOVÉ: Obrazovka s finálním skóre - používá uložené final_score
+        draw_final_score(screen, final_score)
 
     pygame.display.flip()
 
