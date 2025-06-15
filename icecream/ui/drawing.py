@@ -1,5 +1,8 @@
+from config import settings
+from config.settings import *
 import pygame
 import math
+from config import settings
 
 def draw_gradient_background(surface, color1, color2, height):
     """Vykreslí vertikální gradient"""
@@ -114,7 +117,7 @@ def draw_fancy_title(surface, text, font, x, y, shadow_color=(100, 50, 50), main
 def draw_intro_screen(surface, floating_icecreams, decoration_icecreams, width, height):
     """Vykreslí tematickou úvodní obrazovku"""
     # Gradient pozadí (svetle modré k bílé)
-    draw_gradient_background(surface, (200, 230, 255), (255, 255, 255), height)
+    draw_gradient_background(surface, (200, 230, 255), settings.WHITE, height)
     
     # Aktualizace a vykreslení plovoucích zmrzlin
     for icecream in floating_icecreams:
@@ -123,12 +126,12 @@ def draw_intro_screen(surface, floating_icecreams, decoration_icecreams, width, 
     
     # Hlavní titulek
     title_font = pygame.font.SysFont("arial", 60, bold=True)
-    draw_fancy_title(surface, "Vítejte v Zmrzlinárně!", title_font, 
+    draw_fancy_title(surface, settings.INTRO_TITLE, title_font, 
                     width // 2 - 300, height // 2 - 100)
     
     # Podtitulek
     subtitle_font = pygame.font.SysFont("arial", 24)
-    subtitle_text = subtitle_font.render("Připravte se na sladké dobrodružství!", True, (150, 100, 50))
+    subtitle_text = subtitle_font.render(settings.INTRO_SUBTITLE, True, (150, 100, 50))
     surface.blit(subtitle_text, (width // 2 - subtitle_text.get_width() // 2, height // 2 - 20))
     
     # Dekorativní zmrzliny po stranách (jen 4 zmrzliny místo 5)
@@ -149,7 +152,7 @@ def draw_menu_screen(surface, mouse_pos, decoration_icecreams, width, height):
     
     # Hlavní titulek menu
     title_font = pygame.font.SysFont("arial", 72, bold=True)
-    draw_fancy_title(surface, "ZMRZLINÁRNA", title_font, 
+    draw_fancy_title(surface, settings.MAIN_TITLE, title_font, 
                     width // 2 - 250, height // 2 - 150)
     
     # Stylové tlačítko HRÁT
@@ -200,7 +203,7 @@ def draw_ingredient_panels(surface, drag_items, width, panel_color, section_font
     # Panel pro kornouty - VĚTŠÍ PRO 4 KORNOUTY
     cone_panel_rect = pygame.Rect(width - 300, 20, 135, 280)
     pygame.draw.rect(surface, panel_color, cone_panel_rect, border_radius=8)
-    pygame.draw.rect(surface, (0, 0, 0), cone_panel_rect, 2, border_radius=8)
+    pygame.draw.rect(surface, settings.BLACK, cone_panel_rect, 2, border_radius=8)
     
     cone_title = section_font.render("KORNOUTY", True, (100, 50, 150))
     surface.blit(cone_title, (cone_panel_rect.x + 10, cone_panel_rect.y + 10))
@@ -208,7 +211,7 @@ def draw_ingredient_panels(surface, drag_items, width, panel_color, section_font
     # Panel pro kopečky - VĚTŠÍ PRO 9 KOPEČKŮ
     scoop_panel_rect = pygame.Rect(width - 160, 20, 135, 500)
     pygame.draw.rect(surface, panel_color, scoop_panel_rect, border_radius=8)
-    pygame.draw.rect(surface, (0, 0, 0), scoop_panel_rect, 2, border_radius=8)
+    pygame.draw.rect(surface, settings.BLACK, scoop_panel_rect, 2, border_radius=8)
     
     scoop_title = section_font.render("KOPEČKY", True, (150, 100, 50))
     surface.blit(scoop_title, (scoop_panel_rect.x + 10, scoop_panel_rect.y + 10))
@@ -244,10 +247,10 @@ def draw_ingredient_panels(surface, drag_items, width, panel_color, section_font
         if not item.placed and not item.dragging:  # Popisky jen pro ne-tažené ingredience
             # Popisky
             if item.item_type == "cone" and item.item_key:
-                cone_text = small_font.render(cone_names[item.item_key], True, (0, 0, 0))
+                cone_text = small_font.render(cone_names[item.item_key], True, settings.BLACK)
                 surface.blit(cone_text, (item.rect.right + 5, item.rect.centery - 8))
             elif item.item_type == "scoop" and item.item_key:
-                flavor_text = small_font.render(flavor_names[item.item_key], True, (0, 0, 0))
+                flavor_text = small_font.render(flavor_names[item.item_key], True, settings.BLACK)
                 surface.blit(flavor_text, (item.rect.right + 5, item.rect.centery - 8))
 
 def draw_score(surface, score, assembly_center):
@@ -314,7 +317,7 @@ def draw_timer(surface, time_left, assembly_center):
     
     # Zbývající čas - větší font
     timer_font = pygame.font.SysFont("arial", 28, bold=True)
-    timer_text = timer_font.render(f"{time_left}s", True, (255, 255, 255))
+    timer_text = timer_font.render(f"{time_left}s", True, settings.WHITE)
     timer_x = timer_bg_rect.x + (timer_bg_rect.width - timer_text.get_width()) // 2
     surface.blit(timer_text, (timer_x, timer_bg_rect.y + 28))
 
@@ -323,9 +326,9 @@ def draw_final_score(surface, final_score, width, height):
     # Stejný gradient pozadí jako menu (růžové k žluté)
     draw_gradient_background(surface, (255, 200, 220), (255, 240, 200), height)
     
-    # Hlavní titulek "ČAS VYPRŠEL!"
+    # Hlavní titulek settings.GAME_OVER_TITLE
     title_font = pygame.font.SysFont("arial", 60, bold=True)
-    draw_fancy_title(surface, "ČAS VYPRŠEL!", title_font, 
+    draw_fancy_title(surface, settings.GAME_OVER_TITLE, title_font, 
                     width // 2 - 220, height // 2 - 180, 
                     shadow_color=(80, 20, 20), main_color=(255, 150, 150))
     
@@ -336,9 +339,9 @@ def draw_final_score(surface, final_score, width, height):
     # Vykreslení fancy panelu
     draw_fancy_panel(surface, panel_rect)
     
-    # "FINÁLNÍ SKÓRE" - menší titulek vycentrovaný
+    # settings.FINAL_SCORE_TITLE - menší titulek vycentrovaný
     subtitle_font = pygame.font.SysFont("arial", 28, bold=True)
-    subtitle_text = "FINÁLNÍ SKÓRE"
+    subtitle_text = settings.FINAL_SCORE_TITLE
     subtitle_surface = subtitle_font.render(subtitle_text, True, (255, 220, 180))
     subtitle_x = panel_rect.centerx - subtitle_surface.get_width() // 2
     draw_fancy_title(surface, subtitle_text, subtitle_font,
@@ -462,7 +465,7 @@ def draw_controls_help(surface, state, height, section_font, small_font):
     y_start = height - (len(help_texts) * 20) - 10
     for i, text in enumerate(help_texts):
         if i == 0: 
-            help_surface = section_font.render(text, True, (0, 0, 0))
+            help_surface = section_font.render(text, True, settings.BLACK)
         else:
-            help_surface = small_font.render(text, True, (0, 0, 0))
+            help_surface = small_font.render(text, True, settings.BLACK)
         surface.blit(help_surface, (10, y_start + i * 20))

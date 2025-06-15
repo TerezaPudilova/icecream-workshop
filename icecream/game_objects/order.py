@@ -1,26 +1,12 @@
 import random
+from config import settings
 
 class Order:
     def __init__(self):
         # Mapování názvů
-        self.flavor_names = {
-            'raspberry': 'malina',
-            'pistachio': 'pistácie', 
-            'caramel': 'karamel',
-            'hazelnut': 'oříšek',
-            'lemon': 'citrón',
-            'vanilla': 'vanilka',
-            'peach': 'meruňka',
-            'strawberry': 'jahoda',
-            'chocolate': 'čokoláda'
-        }
+        self.flavor_names = settings.FLAVOR_NAMES 
 
-        self.cone_names = {
-            'classic': 'klasický',
-            'waffle': 'vafle',
-            'short': 'malý',
-            'sugar': 'cukrový',
-        }
+        self.cone_names = settings.CONE_NAMES 
         
         # Výběr kornoutu ze spritesheet
         available_cones = list(self.cone_names.keys())
@@ -28,7 +14,7 @@ class Order:
         
         # Výběr kopečků
         available_flavors = list(self.flavor_names.keys())
-        num_scoops = random.randint(1, 3)
+        num_scoops = random.randint(settings.MIN_SCOOPS_PER_ORDER, settings.MAX_SCOOPS_PER_ORDER)
         self.scoops = random.sample(available_flavors, num_scoops)
 
     def get_text(self):

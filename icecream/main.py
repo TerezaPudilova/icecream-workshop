@@ -9,6 +9,11 @@ import sys
 import random
 import os
 
+# Import konfigurace
+from config import settings
+from config.settings import *
+
+
 print("🚀 Spouštím hlavní hru...")
 print(f"📁 Pracovní adresář: {os.getcwd()}")
 
@@ -45,38 +50,26 @@ pygame.init()
 global final_score
 
 # Nastavení velikosti okna
-WIDTH, HEIGHT = 1200, 700  
+WIDTH, HEIGHT = WINDOW_WIDTH, WINDOW_HEIGHT  
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Obsluha Zmrzlinárny")
+pygame.display.set_caption(WINDOW_TITLE)
 
-ASSEMBLY_CENTER = (WIDTH // 2 - 100, HEIGHT // 2 + 50)
+ASSEMBLY_CENTER = settings.ASSEMBLY_CENTER
 
 # FPS a časovač
 clock = pygame.time.Clock()
-FPS = 60
-
-# Barvy
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-GREEN = (0, 150, 0)
-RED = (150, 0, 0)
-LIGHT_GREEN = (200, 255, 200)
-LIGHT_RED = (255, 200, 200)
-LIGHT_GRAY = (230, 230, 230)
-LIGHT_BLUE = (220, 240, 255)
-ASSEMBLY_NORMAL = (240, 240, 255)
-ASSEMBLY_ERROR = (255, 200, 200)
-YELLOW = (255, 255, 0)
-PANEL_COLOR = (245, 245, 250)
-
-# Fonty
-font = pygame.font.SysFont("arial", 48)
-small_font = pygame.font.SysFont("arial", 16)
-button_font = pygame.font.SysFont("arial", 20)
-order_font = pygame.font.SysFont("arial", 18)
-section_font = pygame.font.SysFont("arial", 18, bold=True)
+FPS = settings.FPS
 
 print("🎨 Načítám grafické assety...")
+
+# Inicializace fontů
+fonts = init_fonts()
+font = fonts['main_title']
+small_font = fonts['small']
+button_font = fonts['button']
+order_font = fonts['order']
+section_font = fonts['section']
+
 
 # Načtení obrázků
 scoop_images = load_scoop_spritesheet()
@@ -192,7 +185,7 @@ def main():
                     item.handle_event(event, assembled_items)
 
         # Vykreslování
-        screen.fill(WHITE)
+        screen.fill(settings.WHITE)
         
         if STATE == "intro":
             draw_intro_screen(screen, floating_icecreams, decoration_icecreams, WIDTH, HEIGHT)

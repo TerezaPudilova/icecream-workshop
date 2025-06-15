@@ -1,3 +1,4 @@
+from config import settings
 import pygame
 import random
 
@@ -63,12 +64,12 @@ def add_new_customer(customer_queue, all_sprites, next_customer_id, window_width
     """Přidá nového zákazníka do fronty"""
     from game_objects.customer import Customer  # Import zde kvůli circular imports
     
-    if len(customer_queue) >= 4:
+    if len(customer_queue) >= settings.MAX_CUSTOMERS_IN_QUEUE:
         return
     new_customer = Customer(len(customer_queue), window_width)
     customer_queue.append(new_customer)
     all_sprites.add(new_customer)
-    next_customer_delay = random.randint(3000, 5000)
+    next_customer_delay = random.randint(settings.NEW_CUSTOMER_DELAY_MIN, settings.NEW_CUSTOMER_DELAY_MAX)
     pygame.time.set_timer(pygame.USEREVENT + 2, next_customer_delay)
 
 def return_to_menu(drag_items, assembled_items, customer_queue, all_sprites, game_state):
@@ -160,4 +161,4 @@ def get_time_left(game_start_time):
     if game_start_time == 0:
         return 60
     elapsed = (pygame.time.get_ticks() - game_start_time) // 1000
-    return max(0, 60 - elapsed)
+    return max(0, settings.GAME_DURATION_SECONDS - elapsed)

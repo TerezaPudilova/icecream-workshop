@@ -1,15 +1,16 @@
 import pygame
 from .order import Order
+from config import settings
 
 
 class Customer(pygame.sprite.Sprite):
-    spacing = 60
+    spacing = settings.CUSTOMER_SPACING
     
     def __init__(self, customer_id, window_width=1200):
         super().__init__()
         try:
             # Použití helper funkce
-            image_path = "assets/Customers/Customer1FF.png"
+            image_path = settings.CUSTOMER_IMAGE
             self.image = pygame.image.load(image_path).convert_alpha()
         except pygame.error:
             print("Nepodařilo se načíst obrázek zákazníka, používám placeholder...")
@@ -30,7 +31,7 @@ class Customer(pygame.sprite.Sprite):
         self.show_order = False
         self.font = pygame.font.SysFont("arial", 14)
 
-        self.target_y = 100
+        self.target_y = settings.CUSTOMER_TARGET_Y
 
         if customer_id == 0:
             self.rect.topleft = (-self.rect.width, self.target_y)
@@ -42,7 +43,7 @@ class Customer(pygame.sprite.Sprite):
             elif customer_id >= 2:
                 self.target_x = self.window_width // 2 - 100 - 3 * self.spacing - (customer_id - 1) * self.spacing
 
-        self.speed = 4
+        self.speed = settings.CUSTOMER_SPEED
         self.arrived = False
         self.served = False
 
@@ -55,15 +56,15 @@ class Customer(pygame.sprite.Sprite):
             elif self.rect.centery < self.target_y:
                 self.rect.centery += self.speed
 
-            if (abs(self.rect.centerx - self.target_x) < 3 and 
-                abs(self.rect.centery - self.target_y) < 3):
+            if (abs(self.rect.centerx - self.target_x) < settings.CUSTOMER_TOLERANCE and 
+                abs(self.rect.centery - self.target_y) < settings.CUSTOMER_TOLERANCE):
                 self.arrived = True
                 if self.customer_id == 0:
                     self.show_order = True
 
     def move_in_queue(self, new_position):
         self.customer_id = new_position
-        self.target_y = 100
+        self.target_y = settings.CUSTOMER_TARGET_Y
 
         if new_position == 0:
             self.target_x = self.window_width // 2 - 100
