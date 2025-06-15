@@ -118,29 +118,7 @@ def load_cone_spritesheet():
 scoop_images = load_scoop_spritesheet()
 cone_images = load_cone_spritesheet()  # NOVÉ: Kornouty ze spritesheet
 
-# NOVÉ: Načtení pozadí pro menu a úvodní obrazovku
-def load_background_image():
-    """Načte obrázek pozadí pro menu a úvodní obrazovku"""
-    try:
-        # Pokusíme se načíst obrázek zmrzliny
-        background = pygame.image.load("icecream/assets/Icecream/zmrzlina_pozadi.jpg").convert()
-        # Změníme velikost na velikost okna
-        background = pygame.transform.scale(background, (WIDTH, HEIGHT))
-        return background
-    except pygame.error:
-        print("Nepodařilo se načíst pozadí, používám jednobarevné pozadí...")
-        # Vytvoříme gradient pozadí jako náhradu
-        background = pygame.Surface((WIDTH, HEIGHT))
-        for y in range(HEIGHT):
-            # Gradient od růžové k oranžové
-            color_ratio = y / HEIGHT
-            r = int(255 * (0.9 + 0.1 * color_ratio))
-            g = int(180 * (0.8 + 0.2 * color_ratio))
-            b = int(150 * (0.7 + 0.3 * color_ratio))
-            pygame.draw.line(background, (r, g, b), (0, y), (WIDTH, y))
-        return background
-
-background_image = load_background_image()
+# ODSTRANĚNO: Načítání pozadí pro menu a úvodní obrazovku
 
 # Mapování názvů
 flavor_names = {
@@ -734,62 +712,21 @@ while running:
     screen.fill(WHITE)
     
     if STATE == "intro":
-        # NOVÉ: Pozadí pro úvodní obrazovku
-        screen.blit(background_image, (0, 0))
-        
-        # Poloprůhledné pozadí pro text
-        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 120))  # Černé s průhledností
-        screen.blit(overlay, (0, 0))
-        
-        text = font.render("Vítejte v Zmrzlinárně!", True, WHITE)
-        text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
-        
-        # Stín pro text
-        shadow_text = font.render("Vítejte v Zmrzlinárně!", True, BLACK)
-        shadow_rect = shadow_text.get_rect(center=(WIDTH // 2 + 3, HEIGHT // 2 - 47))
-        screen.blit(shadow_text, shadow_rect)
-        screen.blit(text, text_rect)
-        
+        # VRÁCENO: Jednoduché bílé pozadí
+        text = font.render("Vítejte v Zmrzlinárně!", True, BLACK)
+        screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - 50))
         if pygame.time.get_ticks() - intro_start_time > 3000:
             STATE = "menu"
 
     elif STATE == "menu":
-        # NOVÉ: Pozadí pro menu
-        screen.blit(background_image, (0, 0))
-        
-        # Poloprůhledné pozadí pro UI
-        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 100))  # Černé s průhledností
-        screen.blit(overlay, (0, 0))
-        
-        # Titulek menu
-        title_text = font.render("MENU", True, WHITE)
-        title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 100))
-        
-        # Stín pro titulek
-        title_shadow = font.render("MENU", True, BLACK)
-        title_shadow_rect = title_shadow.get_rect(center=(WIDTH // 2 + 3, HEIGHT // 2 - 97))
-        screen.blit(title_shadow, title_shadow_rect)
-        screen.blit(title_text, title_rect)
-        
-        # Tlačítko hrát
-        button_text = font.render("HRÁT", True, WHITE)
+        # VRÁCENO: Jednoduché bílé pozadí
+        text = font.render("MENU", True, BLACK)
+        screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - 100))
+        button_text = font.render("HRÁT", True, BLACK)
         button_rect = button_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-        
-        # Pozadí tlačítka
-        button_bg_rect = pygame.Rect(button_rect.x - 20, button_rect.y - 10, 
-                                    button_rect.width + 40, button_rect.height + 20)
-        pygame.draw.rect(screen, (100, 50, 150, 180), button_bg_rect, border_radius=10)
-        pygame.draw.rect(screen, WHITE, button_bg_rect, 3, border_radius=10)
-        
-        # Stín pro tlačítko
-        button_shadow = font.render("HRÁT", True, BLACK)
-        button_shadow_rect = button_shadow.get_rect(center=(WIDTH // 2 + 2, HEIGHT // 2 + 2))
-        screen.blit(button_shadow, button_shadow_rect)
         screen.blit(button_text, button_rect)
         
-        # NOVÉ: Zobrazení nápovědy ovládání
+        # Zobrazení nápovědy ovládání
         draw_controls_help(screen, "menu")
 
     elif STATE == "playing":
