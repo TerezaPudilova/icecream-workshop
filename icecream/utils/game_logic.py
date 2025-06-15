@@ -1,7 +1,7 @@
 import pygame
 import random
 
-# Globální proměnná pro assembled_items (kvůli circular imports)
+# Globální proměnná pro assembled_items (circular imports)
 _assembled_items = []
 
 def get_assembled_items_global():

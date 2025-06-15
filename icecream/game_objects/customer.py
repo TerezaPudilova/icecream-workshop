@@ -8,7 +8,7 @@ class Customer(pygame.sprite.Sprite):
     def __init__(self, customer_id, window_width=1200):
         super().__init__()
         try:
-            # OPRAVENO: Použití helper funkce
+            # Použití helper funkce
             image_path = "assets/Customers/Customer1FF.png"
             self.image = pygame.image.load(image_path).convert_alpha()
         except pygame.error:

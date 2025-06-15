@@ -4,7 +4,7 @@ import pygame
 def load_icecream_decoration():
     """Načte obrázek zmrzlin a rozřeže ho na jednotlivé kornouty se zmrzlinou"""
     try:
-        # OPRAVENO: Použití path_helper
+        # Použití path_helper
         icecream_sheet = pygame.image.load("assets/Icecream/icecream_uvod_2.png").convert_alpha()
         
         sheet_width = icecream_sheet.get_width()
@@ -16,8 +16,8 @@ def load_icecream_decoration():
         
         icecreams = []
         
-        # Rozřezání na 4 zmrzliny (vynecháváme první - nejvíc nalevo)
-        for i in range(1, 5):  # Začínáme od indexu 1 místo 0
+        # Rozřezání na 4 zmrzliny 
+        for i in range(1, 5):  # Začínám od indexu 1 místo 0 (vynechání 1. zmrzliny)
             # Individuální padding pro každou zmrzlinu
             if i == 1:  # První zmrzlina v našem seznamu (druhá v originále)
                 # Více oříznutí zleva kvůli viditelné části předchozí zmrzliny
@@ -62,7 +62,7 @@ def load_icecream_decoration():
 def load_scoop_spritesheet():
     """Načte spritesheet kopečků a extrahuje jednotlivé kopečky pomocí subsurface()"""
     try:
-        # OPRAVENO: Použití path_helper
+        # Použití path_helper
         spritesheet = pygame.image.load("assets/Icecream/download.png").convert_alpha()
         
         sheet_width = spritesheet.get_width()
@@ -135,7 +135,7 @@ def load_scoop_spritesheet():
             }
         except pygame.error:
             print("Nepodařilo se načíst ani záložní obrázky, používám placeholdery...")
-            # Vytvoříme placeholder kopečky
+            # Placeholder kopečky
             placeholder_chocolate = pygame.Surface((48, 48), pygame.SRCALPHA)
             pygame.draw.circle(placeholder_chocolate, (139, 69, 19), (24, 24), 20)
             placeholder_vanilla = pygame.Surface((48, 48), pygame.SRCALPHA)
@@ -148,13 +148,13 @@ def load_scoop_spritesheet():
 def load_cone_spritesheet():
     """Načte spritesheet kornoutů pomocí subsurface()"""
     try:
-        # OPRAVENO: Použití path_helper
+        # Použití path_helper
         spritesheet = pygame.image.load("assets/Icecream/cones.png").convert_alpha()
         
         sheet_width = spritesheet.get_width()
         sheet_height = spritesheet.get_height()
         
-        # Předpokládám 4 kornouty v řadě (1x4)
+        # 4 kornouty v řadě (1x4)
         cone_width = sheet_width // 4
         cone_height = sheet_height
         
@@ -185,7 +185,7 @@ def load_cone_spritesheet():
                     cone_width - padding_left - padding_right, 
                     cone_height - 2 * padding_y
                 )
-            else:  # Short a sugar kornouty - ponecháme původní nastavení (fungují dobře)
+            else:  # Short a sugar kornouty
                 padding_settings = {
                     2: {'x': int(cone_width * 0.12), 'y': int(cone_height * 0.06)},  # short  
                     3: {'x': int(cone_width * 0.08), 'y': int(cone_height * 0.05)}   # sugar
@@ -210,18 +210,16 @@ def load_cone_spritesheet():
     except pygame.error:
         print("Nepodařilo se načíst spritesheet kornoutů, používám záložní obrázek...")
         # Záložní načtení - vytvoříme více variant ze stejného obrázku
-        # Záložní načtení - vytvoříme více variant ze stejného obrázku
         try:
             cone_img = pygame.image.load("assets/Icecream/kornout.png").convert_alpha()
             return {
                 'classic': cone_img,
-                'waffle': cone_img,  # V budoucnu můžete přidat různé kornouty
+                'waffle': cone_img,
                 'sugar': cone_img,
                 'chocolate': cone_img
             }
         except pygame.error:
             print("Nepodařilo se načíst ani záložní kornout!")
-            # Vytvoříme jednoduchý placeholder
             placeholder = pygame.Surface((64, 64), pygame.SRCALPHA)
             pygame.draw.polygon(placeholder, (210, 180, 140), [(32, 5), (10, 60), (54, 60)])
             return {'classic': placeholder}

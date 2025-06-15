@@ -461,7 +461,7 @@ def draw_controls_help(surface, state, height, section_font, small_font):
     # Posun do levého spodního rohu
     y_start = height - (len(help_texts) * 20) - 10
     for i, text in enumerate(help_texts):
-        if i == 0:  # Nadpis "OVLÁDÁNÍ" černě a tučně
+        if i == 0: 
             help_surface = section_font.render(text, True, (0, 0, 0))
         else:
             help_surface = small_font.render(text, True, (0, 0, 0))
