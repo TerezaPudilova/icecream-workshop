@@ -1,3 +1,5 @@
 """
-.. include:: ../../README.md
+Icecream Game Package
 """
+
+__version__ = "1.0.0"
