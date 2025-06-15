@@ -1,41 +1,35 @@
-# 🍦 Ice Cream Game
+# Icecream Game 🍦
 
-Jednoduchá 2D hra vytvořená v Pythonu pomocí knihovny Pygame. Otevře se jako samostatné desktopové okno.
+Jednoduchá hra na obsluhu zmrzlinárny vytvořená v Pygame.
 
-## 🧰 Požadavky
-
-- Python 3.11+
-- Pygame
-- NumPy
-
-## 🛠️ Instalace
-
-1. Naklonuj repozitář:
+## 🚀 Spuštění hry
 
 ```bash
-git clone https://github.com/tvoje-uzivatelske-jmeno/icecream-game.git
-cd icecream-game
-
+cd icecream/
+python main.py
 ```
 
-## 🛠️ Aktivace .venv a spuštění hry
+## 🎮 Ovládání
 
-1. Vytvoř a aktivuj virtuální prostředí
+- **Enter** - Spustit hru / Dokončit objednávku
+- **Mezerník** - Reset sestavování
+- **Escape** - Návrat do menu / Ukončit hru
+- **Myš** - Přetahování ingrediencí
 
-```bash
-python -m venv .venv
-source .venv/bin/activate   # na Windows: .venv\Scripts\activate
+## 📁 Struktura projektu
+
+```
+icecream/
+├── main.py              # Hlavní soubor hry
+├── assets/              # Grafické assety
+├── game_objects/        # Herní objekty (zákazníci, předměty, objednávky)
+├── ui/                  # Uživatelské rozhraní
+└── utils/               # Pomocné funkce
 ```
 
-2. Nainstaluj závilosti
+## 🎯 Cíl hry
 
-```bash
-pip install -r requirements.txt
-```
+Obsluhujte zákazníky ve zmrzlinárně! Sestavte správné objednávky podle požadavků zákazníků v časovém limitu.
 
-3. spusť hru
-
-```bash
-python -m icecream.main
-```
-
+---
+*Projekt vytvořen jako vzdělávací ukázka programování v Pygame*
