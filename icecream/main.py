@@ -398,12 +398,12 @@ def load_cone_spritesheet():
         cones = {}
         cone_names = ['classic', 'waffle', 'short', 'sugar']
         
-        # NOVÉ: Asymetrické oříznutí pro classic kornout s posunutím doleva
+        # OPRAVENO: Lepší oříznutí pro classic a waffle - odstranění černých artefaktů a lepší centrování
         for i in range(4):
-            if i == 0:  # Classic kornout - posun doleva pro lepší centrace pod kopeček
-                padding_left = int(cone_width * 0.08)   # Méně zleva - posun doleva
-                padding_right = int(cone_width * 0.05)  # Mírně více zprava
-                padding_y = int(cone_height * 0.06)
+            if i == 0:  # Classic kornout - více oříznutí zleva kvůli černým znakům
+                padding_left = int(cone_width * 0.15)   # Více zleva - odstranění černých artefaktů
+                padding_right = int(cone_width * 0.03)  # Minimální zprava pro zachování velikosti
+                padding_y = int(cone_height * 0.04)     # Menší vertikální oříznutí
                 
                 rect = pygame.Rect(
                     i * cone_width + padding_left, 
@@ -411,9 +411,19 @@ def load_cone_spritesheet():
                     cone_width - padding_left - padding_right, 
                     cone_height - 2 * padding_y
                 )
-            else:  # Ostatní kornouty - symetrické oříznutí
+            elif i == 1:  # Waffle kornout - také více oříznutí zleva a méně zprava
+                padding_left = int(cone_width * 0.12)   # Více zleva pro lepší centrování
+                padding_right = int(cone_width * 0.02)  # Minimální zprava
+                padding_y = int(cone_height * 0.04)     # Menší vertikální oříznutí
+                
+                rect = pygame.Rect(
+                    i * cone_width + padding_left, 
+                    padding_y, 
+                    cone_width - padding_left - padding_right, 
+                    cone_height - 2 * padding_y
+                )
+            else:  # Short a sugar kornouty - ponecháme původní nastavení (fungují dobře)
                 padding_settings = {
-                    1: {'x': int(cone_width * 0.10), 'y': int(cone_height * 0.05)},  # waffle
                     2: {'x': int(cone_width * 0.12), 'y': int(cone_height * 0.06)},  # short  
                     3: {'x': int(cone_width * 0.08), 'y': int(cone_height * 0.05)}   # sugar
                 }
