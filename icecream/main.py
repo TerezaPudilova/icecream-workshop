@@ -1017,7 +1017,7 @@ def draw_final_score(surface, final_score):
     # UPRAVENO: Stejný gradient pozadí jako menu (růžové k žluté)
     draw_gradient_background(surface, (255, 200, 220), (255, 240, 200))
     
-    # Plovoucí zmrzliny na pozadí nejsou v menu, takže je zde také nebudeme
+    # ODSTRANĚNO: Žádné zmrzliny na finální obrazovce
     
     # Hlavní titulek "ČAS VYPRŠEL!"
     title_font = pygame.font.SysFont("arial", 60, bold=True)
@@ -1032,37 +1032,47 @@ def draw_final_score(surface, final_score):
     # Vykreslení fancy panelu (stejný styl jako tlačítka)
     draw_fancy_panel(surface, panel_rect)
     
-    # "FINÁLNÍ SKÓRE" - menší titulek
+    # "FINÁLNÍ SKÓRE" - menší titulek vycentrovaný
     subtitle_font = pygame.font.SysFont("arial", 28, bold=True)
-    draw_fancy_title(surface, "FINÁLNÍ SKÓRE", subtitle_font,
-                    panel_rect.centerx - 120, panel_rect.y + 30,
+    subtitle_text = "FINÁLNÍ SKÓRE"
+    subtitle_surface = subtitle_font.render(subtitle_text, True, (255, 220, 180))
+    subtitle_x = panel_rect.centerx - subtitle_surface.get_width() // 2
+    draw_fancy_title(surface, subtitle_text, subtitle_font,
+                    subtitle_x, panel_rect.y + 30,
                     shadow_color=(40, 40, 100), main_color=(255, 220, 180))
     
-    # Samotné skóre - velké zlaté číslo
+    # UPRAVENO: Samotné skóre - vycentrované v panelu
     score_font = pygame.font.SysFont("arial", 72, bold=True)
-    draw_fancy_title(surface, str(final_score), score_font,
-                    panel_rect.centerx - 40, panel_rect.y + 80,
+    score_text = str(final_score)
+    score_surface = score_font.render(score_text, True, (255, 215, 100))
+    score_x = panel_rect.centerx - score_surface.get_width() // 2
+    draw_fancy_title(surface, score_text, score_font,
+                    score_x, panel_rect.y + 80,
                     shadow_color=(100, 70, 20), main_color=(255, 215, 100))
     
-    # UPRAVENO: Tlačítka ve stejném stylu jako hlavní menu
+    # UPRAVENO: Tlačítka zarovnaná s panelem (stejná šířka jako panel)
     button_font = pygame.font.SysFont("arial", 24, bold=True)
     
-    # UPRAVENO: Tlačítko "HRÁT" místo "NOVÁ HRA"
-    new_game_rect = pygame.Rect(WIDTH // 2 - 220, HEIGHT // 2 + 120, 150, 50)
+    # UPRAVENO: Tlačítka zarovnaná s levým a pravým okrajem panelu
+    button_width = 200
+    button_spacing = 20  # Mezera mezi tlačítky
+    
+    # Výpočet pozic tlačítek tak, aby byla zarovnaná s panelem
+    total_buttons_width = button_width * 2 + button_spacing
+    buttons_start_x = panel_rect.centerx - total_buttons_width // 2
+    
+    # Tlačítko "HRÁT" - zarovnané s levým okrajem panelu
+    new_game_rect = pygame.Rect(buttons_start_x, HEIGHT // 2 + 120, button_width, 50)
     mouse_pos = pygame.mouse.get_pos()
     hover_new = new_game_rect.collidepoint(mouse_pos)
     draw_fancy_button_no_shadow(surface, new_game_rect, "HRÁT", button_font, hover_new)
     
-    # UPRAVENO: Tlačítko "ZPĚT DO MENU" s větším paddingem (větší šířka)
-    menu_rect = pygame.Rect(WIDTH // 2 + 70, HEIGHT // 2 + 120, 200, 50)
+    # Tlačítko "ZPĚT DO MENU" - zarovnané s pravým okrajem panelu  
+    menu_rect = pygame.Rect(buttons_start_x + button_width + button_spacing, HEIGHT // 2 + 120, button_width, 50)
     hover_menu = menu_rect.collidepoint(mouse_pos)
     draw_fancy_button_no_shadow(surface, menu_rect, "ZPĚT DO MENU", button_font, hover_menu)
     
-    # UPRAVENO: Dekorativní zmrzliny stejně jako v menu - jen po stranách tlačítek
-    if len(decoration_icecreams) >= 2:
-        # Jen po stranách tlačítek (jako v menu)
-        surface.blit(decoration_icecreams[0], (new_game_rect.left - 120, new_game_rect.centery - 60))
-        surface.blit(decoration_icecreams[1], (menu_rect.right + 40, menu_rect.centery - 60))
+    # ODSTRANĚNO: Žádné dekorativní zmrzliny
     
     # Stylové instrukce dole
     instruction_font = pygame.font.SysFont("arial", 18)
@@ -1153,15 +1163,23 @@ while running:
         elif event.type == pygame.USEREVENT + 2:
             add_new_customer()
         
-        # NOVÉ: Ovládání klávesnicí
+ # NOVÉ: Ovládání klávesnicí
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                if STATE == "playing" or STATE == "game_over":
+                if STATE == "playing":
                     return_to_menu()
                 elif STATE == "menu":
                     running = False
+                elif STATE == "game_over":
+                    # Na finální obrazovce Escape vede do menu
+                    return_to_menu()
             elif event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
-                if STATE == "menu" or STATE == "game_over":
+                if STATE == "menu":
+                    initialize_game()
+                    STATE = "playing"
+                    add_new_customer()
+                elif STATE == "game_over":
+                    # Na finální obrazovce Enter spustí novou hru
                     initialize_game()
                     STATE = "playing"
                     add_new_customer()
@@ -1180,19 +1198,26 @@ while running:
                     
         elif STATE == "game_over":
             if event.type == pygame.MOUSEBUTTONDOWN:
-                # UPRAVENO: Aktualizované pozice tlačítek podle nového designu
+                # UPRAVENO: Aktualizované pozice tlačítek podle nového zarovnání
                 mouse_pos = event.pos
-                # UPRAVENO: Pozice tlačítek podle nového layoutu
-                new_game_rect = pygame.Rect(WIDTH // 2 - 220, HEIGHT // 2 + 120, 150, 50)  # Tlačítko "HRÁT"
-                menu_rect = pygame.Rect(WIDTH // 2 + 70, HEIGHT // 2 + 120, 200, 50)  # Větší "ZPĚT DO MENU"
+                
+                # UPRAVENO: Výpočet pozic stejný jako v draw_final_score
+                panel_width = 500
+                button_width = 200
+                button_spacing = 20
+                total_buttons_width = button_width * 2 + button_spacing
+                buttons_start_x = (WIDTH // 2) - total_buttons_width // 2
+                
+                new_game_rect = pygame.Rect(buttons_start_x, HEIGHT // 2 + 120, button_width, 50)
+                menu_rect = pygame.Rect(buttons_start_x + button_width + button_spacing, HEIGHT // 2 + 120, button_width, 50)
                 
                 if new_game_rect.collidepoint(mouse_pos):
-                    # UPRAVENO: Tlačítko "HRÁT" spustí hned novou hru
+                    # Tlačítko "HRÁT" spustí hned novou hru
                     initialize_game()
                     STATE = "playing"
                     add_new_customer()
                 elif menu_rect.collidepoint(mouse_pos):
-                    # UPRAVENO: Tlačítko "ZPĚT DO MENU" vede do menu
+                    # Tlačítko "ZPĚT DO MENU" vede do menu
                     return_to_menu()
                     
         elif STATE == "playing":
