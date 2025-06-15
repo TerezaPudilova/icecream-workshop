@@ -37,7 +37,7 @@ button_font = pygame.font.SysFont("arial", 20)
 order_font = pygame.font.SysFont("arial", 18)
 section_font = pygame.font.SysFont("arial", 18, bold=True)
 
-# NOVÉ: Načtení spritesheetů pomocí subsurface()
+# Načtení spritesheetů pomocí subsurface()
 def load_scoop_spritesheet():
     """Načte spritesheet kopečků a extrahuje jednotlivé kopečky pomocí subsurface()"""
     try:
@@ -118,7 +118,7 @@ def load_cone_spritesheet():
 scoop_images = load_scoop_spritesheet()
 cone_images = load_cone_spritesheet()  # NOVÉ: Kornouty ze spritesheet
 
-# ODSTRANĚNO: Načítání pozadí pro menu a úvodní obrazovku
+# Načítání pozadí pro menu a úvodní obrazovku
 
 # Mapování názvů
 flavor_names = {
@@ -143,7 +143,7 @@ cone_names = {
 score = 0
 assembly_error = False
 error_timer = 0
-game_start_time = 0  # NOVÉ: Čas začátku hry
+game_start_time = 0  # Čas začátku hry
 
 class DraggableItem:
     def __init__(self, image, label, start_pos, item_key=None, item_type="scoop"):
@@ -158,7 +158,7 @@ class DraggableItem:
         self.offset = (0, 0)
         self.placed = False
         
-        # NOVÉ: Animace
+        # Animace
         self.hover_scale = 1.0
         self.target_scale = 1.0
         self.bounce_offset = 0
@@ -185,9 +185,9 @@ class DraggableItem:
                 self.bounce_offset = 0
 
     def draw(self, surface):
-        # NOVÉ: Aplikace animací při vykreslování
+        # Aplikace animací při vykreslování
         if self.placed:
-            # UPRAVENO: Žádné animace pro umístěné předměty - jen standardní vykreslení
+            # Žádné animace pro umístěné předměty - jen standardní vykreslení
             draw_pos = self.rect.topleft
         else:
             # Hover efekt pro neumístěné předměty
@@ -239,7 +239,7 @@ class DraggableItem:
                 self.rect.y = mouse_y + self.offset[1]
 
 class Customer(pygame.sprite.Sprite):
-    spacing = 60  # NOVÉ: Zmenšené rozestupy mezi zákazníky (z 80 na 60)
+    spacing = 60  # Zmenšené rozestupy mezi zákazníky (z 80 na 60)
     def __init__(self, customer_id):
         super().__init__()
         image_path = "icecream/assets/Customers/Customer1FF.png"
@@ -263,7 +263,7 @@ class Customer(pygame.sprite.Sprite):
             elif customer_id >= 2:
                 self.target_x = WIDTH // 2 - 100 - 3 * self.spacing - (customer_id - 1) * self.spacing
 
-        self.speed = 4  # NOVÉ: Zvýšená rychlost pohybu (z 2 na 4)
+        self.speed = 4  # Zvýšená rychlost pohybu (z 2 na 4)
         self.arrived = False
         self.served = False
 
@@ -277,7 +277,7 @@ class Customer(pygame.sprite.Sprite):
                 self.rect.centery += self.speed
 
             if (abs(self.rect.centerx - self.target_x) < 3 and 
-                abs(self.rect.centery - self.target_y) < 3):  # NOVÉ: Zmenšená tolerance pro rychlejší "dorazení" (z 5 na 3)
+                abs(self.rect.centery - self.target_y) < 3):  # Zmenšená tolerance pro rychlejší "dorazení" (z 5 na 3)
                 self.arrived = True
                 if self.customer_id == 0:
                     self.show_order = True
@@ -294,7 +294,7 @@ class Customer(pygame.sprite.Sprite):
             self.target_x = WIDTH // 2 - 100 - 200 - (new_position - 1) * 60
 
         if (abs(self.rect.centerx - self.target_x) > 3 or 
-            abs(self.rect.centery - self.target_y) > 3):  # NOVÉ: Konzistentní tolerance (z 5 na 3)
+            abs(self.rect.centery - self.target_y) > 3):  # Konzistentní tolerance (z 5 na 3)
             self.arrived = False
             self.show_order = False
 
@@ -386,7 +386,7 @@ def add_new_customer():
     customer_queue.append(new_customer)
     all_sprites.add(new_customer)
     next_customer_id += 1
-    next_customer_delay = random.randint(3000, 5000)  # NOVÉ: Kratší intervaly mezi zákazníky (z 5000-8000 na 3000-5000)
+    next_customer_delay = random.randint(3000, 5000)  # Kratší intervaly mezi zákazníky (z 5000-8000 na 3000-5000)
     pygame.time.set_timer(pygame.USEREVENT + 2, next_customer_delay)
 
 def create_buttons():
@@ -414,7 +414,7 @@ def draw_buttons(surface, done_button, reset_button):
     text_rect = reset_text.get_rect(center=reset_button.center)
     surface.blit(reset_text, text_rect)
 
-# NOVÉ: Vylepšené rozhraní pro ingredience
+# Vylepšené rozhraní pro ingredience
 def draw_ingredient_panels(surface, drag_items):
     # Panel pro kornouty - VĚTŠÍ PRO 4 KORNOUTY
     cone_panel_rect = pygame.Rect(WIDTH - 300, 20, 135, 280)
@@ -432,13 +432,13 @@ def draw_ingredient_panels(surface, drag_items):
     scoop_title = section_font.render("KOPEČKY", True, (150, 100, 50))
     surface.blit(scoop_title, (scoop_panel_rect.x + 10, scoop_panel_rect.y + 10))
     
-    # NOVÉ: Aktualizace a vykreslení ingrediencí s animacemi
+    # Aktualizace a vykreslení ingrediencí s animacemi
     for item in drag_items:
         if not item.placed:
             item.update_animation()  # Aktualizace animací
             item.draw(surface)
     
-    # UPRAVENO: Popisky se vykreslují POTÉ, co se vykreslí všechny ingredience
+    # Popisky se vykreslují POTÉ, co se vykreslí všechny ingredience
     # Díky tomu se při drag & drop nepřesouvají názvy s obrázky
     for item in drag_items:
         if not item.placed and not item.dragging:  # Popisky jen pro ne-tažené ingredience
@@ -450,7 +450,7 @@ def draw_ingredient_panels(surface, drag_items):
                 flavor_text = small_font.render(flavor_names[item.item_key], True, BLACK)
                 surface.blit(flavor_text, (item.rect.right + 5, item.rect.centery - 8))
 
-# NOVÉ: Funkce pro návrat do menu
+# Funkce pro návrat do menu
 def return_to_menu():
     global STATE, drag_items, assembled_items, customer_queue, score, assembly_error, all_sprites, game_start_time
     STATE = "menu"
@@ -464,12 +464,12 @@ def return_to_menu():
     # Zrušení časovače pro nové zákazníky
     pygame.time.set_timer(pygame.USEREVENT + 2, 0)
 
-# NOVÉ: Funkce pro inicializaci hry
+# Funkce pro inicializaci hry
 def initialize_game():
     global drag_items, game_start_time, score, assembly_error
     drag_items.clear()
     game_start_time = pygame.time.get_ticks()  # Zaznamenání času začátku hry
-    score = 0  # NOVÉ: Vynulování skóre při každé nové hře
+    score = 0  # Vynulování skóre při každé nové hře
     assembly_error = False  # Reset chybového stavu
     
     # Kornouty ze spritesheet - VŠECHNY 4 TYPY
@@ -500,14 +500,14 @@ def initialize_game():
             )
             drag_items.append(scoop_item)
 
-# NOVÉ: Funkce pro výpočet zbývajícího času
+# Funkce pro výpočet zbývajícího času
 def get_time_left():
     if game_start_time == 0:
         return 60
     elapsed = (pygame.time.get_ticks() - game_start_time) // 1000
     return max(0, 60 - elapsed)
 
-# NOVÉ: Funkce pro zobrazení nápovědy ovládání
+# Funkce pro zobrazení nápovědy ovládání
 def draw_controls_help(surface, state):
     help_texts = []
     
@@ -534,7 +534,7 @@ def draw_controls_help(surface, state):
             help_surface = small_font.render(text, True, BLACK)
         surface.blit(help_surface, (10, y_start + i * 20))
 
-# NOVÉ: Funkce pro graficky zajímavé skóre
+# Funkce pro graficky zajímavé skóre
 def draw_score(surface, score):
     # Pozadí pro skóre
     score_bg_rect = pygame.Rect(15, ASSEMBLY_CENTER[1] - 50, 200, 60)
@@ -561,7 +561,7 @@ def draw_score(surface, score):
     score_x = score_bg_rect.x + (score_bg_rect.width - score_text.get_width()) // 2
     surface.blit(score_text, (score_x, score_bg_rect.y + 28))
 
-# NOVÉ: Funkce pro zobrazení časomíry
+# Funkce pro zobrazení časomíry
 def draw_timer(surface, time_left):
     # Pozadí pro časomíru
     timer_bg_rect = pygame.Rect(15, ASSEMBLY_CENTER[1] - 130, 200, 60)
@@ -600,7 +600,7 @@ def draw_timer(surface, time_left):
     timer_x = timer_bg_rect.x + (timer_bg_rect.width - timer_text.get_width()) // 2
     surface.blit(timer_text, (timer_x, timer_bg_rect.y + 28))
 
-# NOVÉ: Funkce pro zobrazení finálního skóre
+# Funkce pro zobrazení finálního skóre
 def draw_final_score(surface, final_score):
     # Pozadí pro finální skóre
     overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
@@ -673,7 +673,7 @@ while running:
         elif event.type == pygame.USEREVENT + 2:
             add_new_customer()
         
-        # NOVÉ: Ovládání klávesnicí
+        # Ovládání klávesnicí
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 if STATE == "playing" or STATE == "game_over":
@@ -712,14 +712,14 @@ while running:
     screen.fill(WHITE)
     
     if STATE == "intro":
-        # VRÁCENO: Jednoduché bílé pozadí
+        # Jednoduché bílé pozadí
         text = font.render("Vítejte v Zmrzlinárně!", True, BLACK)
         screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - 50))
         if pygame.time.get_ticks() - intro_start_time > 3000:
             STATE = "menu"
 
     elif STATE == "menu":
-        # VRÁCENO: Jednoduché bílé pozadí
+        # Jednoduché bílé pozadí
         text = font.render("MENU", True, BLACK)
         screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - 100))
         button_text = font.render("HRÁT", True, BLACK)
@@ -730,7 +730,7 @@ while running:
         draw_controls_help(screen, "menu")
 
     elif STATE == "playing":
-        # NOVÉ: Kontrola časomíry
+        # Kontrola časomíry
         time_left = get_time_left()
         if time_left <= 0:
             STATE = "game_over"
@@ -743,7 +743,7 @@ while running:
         # Vykreslení oblasti pro sestavování
         assembly_zone = pygame.Rect(ASSEMBLY_CENTER[0] - 50, ASSEMBLY_CENTER[1] - 150, 100, 200)
         
-        # UPRAVENO: Design stejný jako u panelů ingrediencí
+        # Design stejný jako u panelů ingrediencí
         if assembly_error:
             if pygame.time.get_ticks() - error_timer < 3000:
                 if (pygame.time.get_ticks() - error_timer) // 300 % 2 == 0:
@@ -766,20 +766,20 @@ while running:
         if assembly_error and pygame.time.get_ticks() - error_timer < 3000:
             assembly_title = small_font.render("CHYBNÁ OBJEDNÁVKA!", True, RED)
         else:
-            # UPRAVENO: Nový text a černá barva
+            # Nový text a černá barva
             assembly_title = small_font.render("SESTAV OBJEDNÁVKU", True, BLACK)
         screen.blit(assembly_title, (assembly_zone.centerx - assembly_title.get_width() // 2, assembly_zone.top - 25))
 
         for item in assembled_items:
-            # UPRAVENO: Žádné animace pro umístěné předměty
+            # Žádné animace pro umístěné předměty
             item.draw(screen)
 
-        # NOVÉ: Vykreslení rozdělených panelů
+        # Vykreslení rozdělených panelů
         draw_ingredient_panels(screen, drag_items)
 
         draw_buttons(screen, done_button, reset_button)
 
-        # NOVÉ: Graficky zajímavé skóre a časomíra
+        # Graficky zajímavé skóre a časomíra
         draw_score(screen, score)
         draw_timer(screen, time_left)
 
@@ -790,11 +790,11 @@ while running:
             queue_text = small_font.render(f"Zákazníků ve frontě: {len(customer_queue)}", True, BLACK)
             screen.blit(queue_text, (20, 70))
         
-        # NOVÉ: Zobrazení nápovědy ovládání
+        # Zobrazení nápovědy ovládání
         draw_controls_help(screen, "playing")
     
     elif STATE == "game_over":
-        # NOVÉ: Obrazovka s finálním skóre
+        # Obrazovka s finálním skóre
         draw_final_score(screen, score)
 
     pygame.display.flip()
