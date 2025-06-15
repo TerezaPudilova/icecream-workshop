@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import math
 
 # Inicializace Pygame
 pygame.init()
@@ -37,7 +38,267 @@ button_font = pygame.font.SysFont("arial", 20)
 order_font = pygame.font.SysFont("arial", 18)
 section_font = pygame.font.SysFont("arial", 18, bold=True)
 
-# Načtení spritesheetů pomocí subsurface()
+# NOVÉ: Načtení zmrzlin pro dekoraci
+def load_icecream_decoration():
+    """Načte obrázek zmrzlin a rozřeže ho na jednotlivé kornouty se zmrzlinou"""
+    try:
+        # Načtení obrázku s 5 zmrzlinami v řadě
+        icecream_sheet = pygame.image.load("icecream/assets/Icecream/icecream_uvod_2.png").convert_alpha()  # Název vašeho obrázku
+        
+        sheet_width = icecream_sheet.get_width()
+        sheet_height = icecream_sheet.get_height()
+        
+        # UPRAVENO: Lepší výpočet velikosti jedné zmrzliny s paddingem
+        icecream_width = sheet_width // 5
+        icecream_height = sheet_height
+        
+        # NOVÉ: Padding pro lepší oříznutí (odstraní přečuhující části)
+        padding_x = int(icecream_width * 0.05)  # 5% padding zleva a zprava
+        padding_y = int(icecream_height * 0.02)  # 2% padding shora a zdola
+        
+        icecreams = []
+        
+        # UPRAVENO: Rozřezání na 4 zmrzliny (vynecháváme první - nejvíc nalevo)
+        for i in range(1, 5):  # Začínáme od indexu 1 místo 0
+            # NOVÉ: Aplikace paddingu pro lepší oříznutí
+            rect = pygame.Rect(
+                i * icecream_width + padding_x, 
+                padding_y, 
+                icecream_width - 2 * padding_x, 
+                icecream_height - 2 * padding_y
+            )
+            icecream_surface = icecream_sheet.subsurface(rect)
+            # Změna velikosti pro lepší použití v UI
+            scaled_icecream = pygame.transform.scale(icecream_surface, (80, 120))
+            icecreams.append(scaled_icecream)
+                
+        return icecreams
+        
+    except pygame.error:
+        print("Nepodařilo se načíst obrázek zmrzlin pro dekoraci, používám placeholder...")
+        # Vytvoření placeholder zmrzlin
+        placeholders = []
+        colors = [(255, 200, 150), (139, 69, 19), (144, 238, 144), (255, 182, 193), (255, 255, 224)]
+        
+        for color in colors:
+            placeholder = pygame.Surface((80, 120), pygame.SRCALPHA)
+            # Kornout
+            pygame.draw.polygon(placeholder, (210, 180, 140), [(40, 30), (20, 115), (60, 115)])
+            # Kopeček
+            pygame.draw.circle(placeholder, color, (40, 35), 25)
+            placeholders.append(placeholder)
+        
+        return placeholders
+
+# NOVÉ: Animace plovoucích zmrzlin pro pozadí
+class FloatingIcecream:
+    def __init__(self, image, x, y):
+        self.image = image
+        self.original_y = y
+        self.x = x
+        self.y = y
+        self.float_offset = 0
+        self.float_speed = random.uniform(0.02, 0.05)
+        self.float_amplitude = random.uniform(10, 20)
+        self.rotation = 0
+        self.rotation_speed = random.uniform(-1, 1)
+        self.scale = random.uniform(0.7, 1.3)
+        self.alpha = random.randint(100, 200)
+        
+    def update(self):
+        self.float_offset += self.float_speed
+        self.y = self.original_y + math.sin(self.float_offset) * self.float_amplitude
+        self.rotation += self.rotation_speed
+        
+    def draw(self, surface):
+        # Rotace a průhlednost
+        rotated_image = pygame.transform.rotozoom(self.image, self.rotation, self.scale)
+        
+        # Aplikace průhlednosti
+        temp_surface = rotated_image.copy()
+        temp_surface.set_alpha(self.alpha)
+        
+        # Vycentrování rotovaného obrázku
+        rect = rotated_image.get_rect(center=(self.x, self.y))
+        surface.blit(temp_surface, rect)
+
+# NOVÉ: Gradient pozadí
+def draw_gradient_background(surface, color1, color2):
+    """Vykreslí vertikální gradient"""
+    for y in range(HEIGHT):
+        ratio = y / HEIGHT
+        r = int(color1[0] * (1 - ratio) + color2[0] * ratio)
+        g = int(color1[1] * (1 - ratio) + color2[1] * ratio)
+        b = int(color1[2] * (1 - ratio) + color2[2] * ratio)
+        pygame.draw.line(surface, (r, g, b), (0, y), (WIDTH, y))
+
+# NOVÉ: Vylepšené stylové tlačítko bez stínu
+def draw_fancy_button_no_shadow(surface, rect, text, font, hover=False):
+    """Vykreslí vylepšené stylové tlačítko bez stínu"""
+    # NOVÉ: Animace tlačítka při hover
+    if hover:
+        # Zvětšení tlačítka při hover
+        inflated_rect = rect.copy()
+        inflated_rect.inflate_ip(8, 4)  # Mírné zvětšení
+        working_rect = inflated_rect
+    else:
+        working_rect = rect
+    
+    # ODSTRANĚNO: Všechny stíny
+    
+    # VYLEPŠENÝ: Složitější gradient pro tlačítko
+    if hover:
+        # Zlatavé barvy při hover
+        color1 = (255, 215, 100)  # Zlatá světlá
+        color2 = (255, 180, 50)   # Zlatá střední
+        color3 = (220, 140, 30)   # Zlatá tmavá
+        border_color = (180, 100, 20)
+        text_color = (80, 40, 10)
+    else:
+        # Oranžové barvy normálně
+        color1 = (255, 200, 120)  # Světle oranžová
+        color2 = (255, 160, 80)   # Střední oranžová  
+        color3 = (220, 120, 50)   # Tmavě oranžová
+        border_color = (180, 80, 30)
+        text_color = (100, 50, 20)
+    
+    # NOVÉ: Složitější gradient se třemi barvami
+    button_surface = pygame.Surface((working_rect.width, working_rect.height), pygame.SRCALPHA)
+    for y in range(working_rect.height):
+        if y < working_rect.height // 2:
+            # Horní polovina: color1 -> color2
+            ratio = y / (working_rect.height // 2)
+            r = int(color1[0] * (1 - ratio) + color2[0] * ratio)
+            g = int(color1[1] * (1 - ratio) + color2[1] * ratio)
+            b = int(color1[2] * (1 - ratio) + color2[2] * ratio)
+        else:
+            # Dolní polovina: color2 -> color3
+            ratio = (y - working_rect.height // 2) / (working_rect.height // 2)
+            r = int(color2[0] * (1 - ratio) + color3[0] * ratio)
+            g = int(color2[1] * (1 - ratio) + color3[1] * ratio)
+            b = int(color2[2] * (1 - ratio) + color3[2] * ratio)
+        pygame.draw.line(button_surface, (r, g, b), (0, y), (working_rect.width, y))
+    
+    # NOVÉ: Vnější rámeček s gradientem
+    pygame.draw.rect(surface, border_color, working_rect, border_radius=18, width=4)
+    
+    # NOVÉ: Vnitřní světlý rámeček
+    inner_border_rect = working_rect.copy()
+    inner_border_rect.inflate_ip(-8, -8)
+    pygame.draw.rect(surface, (255, 255, 255, 100), inner_border_rect, border_radius=15, width=2)
+    
+    # Aplikace gradientu
+    inner_rect = working_rect.copy()
+    inner_rect.inflate_ip(-4, -4)
+    
+    # Vytvoření masky pro zaoblené rohy
+    mask_surface = pygame.Surface((inner_rect.width, inner_rect.height), pygame.SRCALPHA)
+    pygame.draw.rect(mask_surface, (255, 255, 255, 255), (0, 0, inner_rect.width, inner_rect.height), border_radius=15)
+    
+    # Aplikace masky na gradient
+    button_surface = pygame.transform.scale(button_surface, (inner_rect.width, inner_rect.height))
+    for y in range(inner_rect.height):
+        for x in range(inner_rect.width):
+            if mask_surface.get_at((x, y))[3] > 0:  # Pokud je pixel v masce viditelný
+                surface.set_at((inner_rect.x + x, inner_rect.y + y), button_surface.get_at((x, y)))
+    
+    # VYLEPŠENÝ: Text s outline efektem
+    # Outline (obrys textu)
+    outline_positions = [(-2, -2), (-2, 2), (2, -2), (2, 2), (-2, 0), (2, 0), (0, -2), (0, 2)]
+    for dx, dy in outline_positions:
+        outline_surface = font.render(text, True, (255, 255, 255, 150))
+        outline_rect = outline_surface.get_rect(center=(working_rect.centerx + dx, working_rect.centery + dy))
+        surface.blit(outline_surface, outline_rect)
+    
+    # Hlavní text
+    text_surface = font.render(text, True, text_color)
+    text_rect = text_surface.get_rect(center=working_rect.center)
+    surface.blit(text_surface, text_rect)
+    
+    # NOVÉ: Světelný efekt nahoře
+    highlight_rect = pygame.Rect(working_rect.x + 10, working_rect.y + 8, working_rect.width - 20, 8)
+    highlight_surface = pygame.Surface((highlight_rect.width, highlight_rect.height), pygame.SRCALPHA)
+    for x in range(highlight_rect.width):
+        alpha = int(100 * (1 - abs(x - highlight_rect.width/2) / (highlight_rect.width/2)))
+        highlight_surface.set_at((x, 0), (255, 255, 255, alpha))
+        highlight_surface.set_at((x, 1), (255, 255, 255, alpha//2))
+    surface.blit(highlight_surface, highlight_rect.topleft)
+    
+    return working_rect
+
+# NOVÉ: Stylový titulek s efekty
+def draw_fancy_title(surface, text, font, x, y, shadow_color=(100, 50, 50), main_color=(255, 220, 180)):
+    """Vykreslí stylový titulek se stínem"""
+    # Stín
+    shadow_surface = font.render(text, True, shadow_color)
+    surface.blit(shadow_surface, (x + 4, y + 4))
+    
+    # Hlavní text
+    main_surface = font.render(text, True, main_color)
+    surface.blit(main_surface, (x, y))
+
+# NOVÉ: Vykreslování pro úvodní obrazovku a menu
+def draw_intro_screen(surface):
+    """Vykreslí tematickou úvodní obrazovku"""
+    # Gradient pozadí (svetle modré k bílé)
+    draw_gradient_background(surface, (200, 230, 255), (255, 255, 255))
+    
+    # Aktualizace a vykreslení plovoucích zmrzlin
+    for icecream in floating_icecreams:
+        icecream.update()
+        icecream.draw(surface)
+    
+    # Hlavní titulek
+    title_font = pygame.font.SysFont("arial", 60, bold=True)
+    draw_fancy_title(surface, "Vítejte v Zmrzlinárně!", title_font, 
+                    WIDTH // 2 - 300, HEIGHT // 2 - 100)
+    
+    # Podtitulek
+    subtitle_font = pygame.font.SysFont("arial", 24)
+    subtitle_text = subtitle_font.render("Připravte se na sladké dobrodružství!", True, (150, 100, 50))
+    surface.blit(subtitle_text, (WIDTH // 2 - subtitle_text.get_width() // 2, HEIGHT // 2 - 20))
+    
+    # UPRAVENO: Dekorativní zmrzliny po stranách (jen 4 zmrzliny místo 5)
+    if len(decoration_icecreams) >= 2:
+        # Levá strana
+        surface.blit(decoration_icecreams[0], (50, HEIGHT // 2 - 60))
+        surface.blit(decoration_icecreams[1], (100, HEIGHT // 2 + 20))
+        
+        # Pravá strana - kontrola existence dalších zmrzlin
+        if len(decoration_icecreams) >= 4:
+            surface.blit(decoration_icecreams[2], (WIDTH - 130, HEIGHT // 2 - 60))
+            surface.blit(decoration_icecreams[3], (WIDTH - 180, HEIGHT // 2 + 20))
+
+def draw_menu_screen(surface, mouse_pos):
+    """Vykreslí tematické menu"""
+    # Gradient pozadí (růžové k žluté)
+    draw_gradient_background(surface, (255, 200, 220), (255, 240, 200))
+    
+    # ODSTRANĚNO: Animace plovoucích zmrzlin (zůstávají jen na úvodní obrazovce)
+    
+    # Hlavní titulek menu
+    title_font = pygame.font.SysFont("arial", 72, bold=True)
+    draw_fancy_title(surface, "ZMRZLINÁRNA", title_font, 
+                    WIDTH // 2 - 250, HEIGHT // 2 - 150)
+    
+    # Stylové tlačítko HRÁT
+    button_font = pygame.font.SysFont("arial", 36, bold=True)
+    button_rect = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 - 20, 200, 60)  # Posunuto výš
+    
+    # Kontrola hover efektu
+    hover = button_rect.collidepoint(mouse_pos)
+    
+    button_rect_result = draw_fancy_button_no_shadow(surface, button_rect, "HRÁT", button_font, hover)
+    
+    # UPRAVENO: Pouze 2 zmrzliny vedle tlačítka HRÁT
+    if len(decoration_icecreams) >= 2:
+        # Jen po stranách tlačítka
+        surface.blit(decoration_icecreams[0], (button_rect.left - 120, button_rect.centery - 60))
+        surface.blit(decoration_icecreams[1], (button_rect.right + 40, button_rect.centery - 60))
+    
+    return button_rect_result
+
+# NOVÉ: Načtení spritesheetů pomocí subsurface()
 def load_scoop_spritesheet():
     """Načte spritesheet kopečků a extrahuje jednotlivé kopečky pomocí subsurface()"""
     try:
@@ -88,8 +349,36 @@ def load_cone_spritesheet():
         cones = {}
         cone_names = ['classic', 'waffle', 'short', 'sugar']
         
+        # NOVÉ: Asymetrické oříznutí pro classic kornout s posunutím doleva
         for i in range(4):
-            rect = pygame.Rect(i * cone_width, 0, cone_width, cone_height)
+            if i == 0:  # Classic kornout - posun doleva pro lepší centrace pod kopeček
+                padding_left = int(cone_width * 0.08)   # Méně zleva - posun doleva
+                padding_right = int(cone_width * 0.05)  # Mírně více zprava
+                padding_y = int(cone_height * 0.06)
+                
+                rect = pygame.Rect(
+                    i * cone_width + padding_left, 
+                    padding_y, 
+                    cone_width - padding_left - padding_right, 
+                    cone_height - 2 * padding_y
+                )
+            else:  # Ostatní kornouty - symetrické oříznutí
+                padding_settings = {
+                    1: {'x': int(cone_width * 0.10), 'y': int(cone_height * 0.05)},  # waffle
+                    2: {'x': int(cone_width * 0.12), 'y': int(cone_height * 0.06)},  # short  
+                    3: {'x': int(cone_width * 0.08), 'y': int(cone_height * 0.05)}   # sugar
+                }
+                
+                padding_x = padding_settings[i]['x']
+                padding_y = padding_settings[i]['y']
+                
+                rect = pygame.Rect(
+                    i * cone_width + padding_x, 
+                    padding_y, 
+                    cone_width - 2 * padding_x, 
+                    cone_height - 2 * padding_y
+                )
+            
             cone_surface = spritesheet.subsurface(rect)
             cone_name = cone_names[i]
             cones[cone_name] = cone_surface
@@ -118,7 +407,17 @@ def load_cone_spritesheet():
 scoop_images = load_scoop_spritesheet()
 cone_images = load_cone_spritesheet()  # NOVÉ: Kornouty ze spritesheet
 
-# Načítání pozadí pro menu a úvodní obrazovku
+# NOVÉ: Načtení dekoračních zmrzlin a vytvoření plovoucích animací
+decoration_icecreams = load_icecream_decoration()
+floating_icecreams = []
+
+# Vytvoření plovoucích zmrzlin pro pozadí
+for _ in range(8):
+    if decoration_icecreams:
+        img = random.choice(decoration_icecreams)
+        x = random.randint(50, WIDTH - 50)
+        y = random.randint(50, HEIGHT - 50)
+        floating_icecreams.append(FloatingIcecream(img, x, y))
 
 # Mapování názvů
 flavor_names = {
@@ -143,7 +442,8 @@ cone_names = {
 score = 0
 assembly_error = False
 error_timer = 0
-game_start_time = 0  # Čas začátku hry
+game_start_time = 0  # NOVÉ: Čas začátku hry
+button_rect_global = pygame.Rect(0, 0, 0, 0)  # Globální proměnná pro tlačítko
 
 class DraggableItem:
     def __init__(self, image, label, start_pos, item_key=None, item_type="scoop"):
@@ -158,7 +458,7 @@ class DraggableItem:
         self.offset = (0, 0)
         self.placed = False
         
-        # Animace
+        # NOVÉ: Animace
         self.hover_scale = 1.0
         self.target_scale = 1.0
         self.bounce_offset = 0
@@ -185,9 +485,9 @@ class DraggableItem:
                 self.bounce_offset = 0
 
     def draw(self, surface):
-        # Aplikace animací při vykreslování
+        # NOVÉ: Aplikace animací při vykreslování
         if self.placed:
-            # Žádné animace pro umístěné předměty - jen standardní vykreslení
+            # UPRAVENO: Žádné animace pro umístěné předměty - jen standardní vykreslení
             draw_pos = self.rect.topleft
         else:
             # Hover efekt pro neumístěné předměty
@@ -239,7 +539,7 @@ class DraggableItem:
                 self.rect.y = mouse_y + self.offset[1]
 
 class Customer(pygame.sprite.Sprite):
-    spacing = 60  # Zmenšené rozestupy mezi zákazníky (z 80 na 60)
+    spacing = 60  # NOVÉ: Zmenšené rozestupy mezi zákazníky (z 80 na 60)
     def __init__(self, customer_id):
         super().__init__()
         image_path = "icecream/assets/Customers/Customer1FF.png"
@@ -263,7 +563,7 @@ class Customer(pygame.sprite.Sprite):
             elif customer_id >= 2:
                 self.target_x = WIDTH // 2 - 100 - 3 * self.spacing - (customer_id - 1) * self.spacing
 
-        self.speed = 4  # Zvýšená rychlost pohybu (z 2 na 4)
+        self.speed = 4  # NOVÉ: Zvýšená rychlost pohybu (z 2 na 4)
         self.arrived = False
         self.served = False
 
@@ -277,7 +577,7 @@ class Customer(pygame.sprite.Sprite):
                 self.rect.centery += self.speed
 
             if (abs(self.rect.centerx - self.target_x) < 3 and 
-                abs(self.rect.centery - self.target_y) < 3):  # Zmenšená tolerance pro rychlejší "dorazení" (z 5 na 3)
+                abs(self.rect.centery - self.target_y) < 3):  # NOVÉ: Zmenšená tolerance pro rychlejší "dorazení" (z 5 na 3)
                 self.arrived = True
                 if self.customer_id == 0:
                     self.show_order = True
@@ -294,7 +594,7 @@ class Customer(pygame.sprite.Sprite):
             self.target_x = WIDTH // 2 - 100 - 200 - (new_position - 1) * 60
 
         if (abs(self.rect.centerx - self.target_x) > 3 or 
-            abs(self.rect.centery - self.target_y) > 3):  # Konzistentní tolerance (z 5 na 3)
+            abs(self.rect.centery - self.target_y) > 3):  # NOVÉ: Konzistentní tolerance (z 5 na 3)
             self.arrived = False
             self.show_order = False
 
@@ -386,7 +686,7 @@ def add_new_customer():
     customer_queue.append(new_customer)
     all_sprites.add(new_customer)
     next_customer_id += 1
-    next_customer_delay = random.randint(3000, 5000)  # Kratší intervaly mezi zákazníky (z 5000-8000 na 3000-5000)
+    next_customer_delay = random.randint(3000, 5000)  # NOVÉ: Kratší intervaly mezi zákazníky (z 5000-8000 na 3000-5000)
     pygame.time.set_timer(pygame.USEREVENT + 2, next_customer_delay)
 
 def create_buttons():
@@ -414,7 +714,7 @@ def draw_buttons(surface, done_button, reset_button):
     text_rect = reset_text.get_rect(center=reset_button.center)
     surface.blit(reset_text, text_rect)
 
-# Vylepšené rozhraní pro ingredience
+# NOVÉ: Vylepšené rozhraní pro ingredience
 def draw_ingredient_panels(surface, drag_items):
     # Panel pro kornouty - VĚTŠÍ PRO 4 KORNOUTY
     cone_panel_rect = pygame.Rect(WIDTH - 300, 20, 135, 280)
@@ -432,13 +732,13 @@ def draw_ingredient_panels(surface, drag_items):
     scoop_title = section_font.render("KOPEČKY", True, (150, 100, 50))
     surface.blit(scoop_title, (scoop_panel_rect.x + 10, scoop_panel_rect.y + 10))
     
-    # Aktualizace a vykreslení ingrediencí s animacemi
+    # NOVÉ: Aktualizace a vykreslení ingrediencí s animacemi
     for item in drag_items:
         if not item.placed:
             item.update_animation()  # Aktualizace animací
             item.draw(surface)
     
-    # Popisky se vykreslují POTÉ, co se vykreslí všechny ingredience
+    # UPRAVENO: Popisky se vykreslují POTÉ, co se vykreslí všechny ingredience
     # Díky tomu se při drag & drop nepřesouvají názvy s obrázky
     for item in drag_items:
         if not item.placed and not item.dragging:  # Popisky jen pro ne-tažené ingredience
@@ -450,7 +750,7 @@ def draw_ingredient_panels(surface, drag_items):
                 flavor_text = small_font.render(flavor_names[item.item_key], True, BLACK)
                 surface.blit(flavor_text, (item.rect.right + 5, item.rect.centery - 8))
 
-# Funkce pro návrat do menu
+# NOVÉ: Funkce pro návrat do menu
 def return_to_menu():
     global STATE, drag_items, assembled_items, customer_queue, score, assembly_error, all_sprites, game_start_time
     STATE = "menu"
@@ -464,12 +764,12 @@ def return_to_menu():
     # Zrušení časovače pro nové zákazníky
     pygame.time.set_timer(pygame.USEREVENT + 2, 0)
 
-# Funkce pro inicializaci hry
+# NOVÉ: Funkce pro inicializaci hry
 def initialize_game():
     global drag_items, game_start_time, score, assembly_error
     drag_items.clear()
     game_start_time = pygame.time.get_ticks()  # Zaznamenání času začátku hry
-    score = 0  # Vynulování skóre při každé nové hře
+    score = 0  # NOVÉ: Vynulování skóre při každé nové hře
     assembly_error = False  # Reset chybového stavu
     
     # Kornouty ze spritesheet - VŠECHNY 4 TYPY
@@ -500,14 +800,14 @@ def initialize_game():
             )
             drag_items.append(scoop_item)
 
-# Funkce pro výpočet zbývajícího času
+# NOVÉ: Funkce pro výpočet zbývajícího času
 def get_time_left():
     if game_start_time == 0:
         return 60
     elapsed = (pygame.time.get_ticks() - game_start_time) // 1000
     return max(0, 60 - elapsed)
 
-# Funkce pro zobrazení nápovědy ovládání
+# NOVÉ: Funkce pro zobrazení nápovědy ovládání
 def draw_controls_help(surface, state):
     help_texts = []
     
@@ -534,7 +834,7 @@ def draw_controls_help(surface, state):
             help_surface = small_font.render(text, True, BLACK)
         surface.blit(help_surface, (10, y_start + i * 20))
 
-# Funkce pro graficky zajímavé skóre
+# NOVÉ: Funkce pro graficky zajímavé skóre
 def draw_score(surface, score):
     # Pozadí pro skóre
     score_bg_rect = pygame.Rect(15, ASSEMBLY_CENTER[1] - 50, 200, 60)
@@ -561,7 +861,7 @@ def draw_score(surface, score):
     score_x = score_bg_rect.x + (score_bg_rect.width - score_text.get_width()) // 2
     surface.blit(score_text, (score_x, score_bg_rect.y + 28))
 
-# Funkce pro zobrazení časomíry
+# NOVÉ: Funkce pro zobrazení časomíry
 def draw_timer(surface, time_left):
     # Pozadí pro časomíru
     timer_bg_rect = pygame.Rect(15, ASSEMBLY_CENTER[1] - 130, 200, 60)
@@ -600,7 +900,7 @@ def draw_timer(surface, time_left):
     timer_x = timer_bg_rect.x + (timer_bg_rect.width - timer_text.get_width()) // 2
     surface.blit(timer_text, (timer_x, timer_bg_rect.y + 28))
 
-# Funkce pro zobrazení finálního skóre
+# NOVÉ: Funkce pro zobrazení finálního skóre
 def draw_final_score(surface, final_score):
     # Pozadí pro finální skóre
     overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
@@ -673,7 +973,7 @@ while running:
         elif event.type == pygame.USEREVENT + 2:
             add_new_customer()
         
-        # Ovládání klávesnicí
+        # NOVÉ: Ovládání klávesnicí
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 if STATE == "playing" or STATE == "game_over":
@@ -693,7 +993,7 @@ while running:
                     
         elif STATE == "menu":
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if button_rect.collidepoint(event.pos):
+                if button_rect_global.collidepoint(event.pos):
                     initialize_game()
                     STATE = "playing"
                     add_new_customer()
@@ -712,25 +1012,20 @@ while running:
     screen.fill(WHITE)
     
     if STATE == "intro":
-        # Jednoduché bílé pozadí
-        text = font.render("Vítejte v Zmrzlinárně!", True, BLACK)
-        screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - 50))
-        if pygame.time.get_ticks() - intro_start_time > 3000:
+        draw_intro_screen(screen)
+        # UPRAVENO: Prodloužen čas zobrazení úvodní obrazovky ze 3 na 4 sekundy
+        if pygame.time.get_ticks() - intro_start_time > 4000:
             STATE = "menu"
 
     elif STATE == "menu":
-        # Jednoduché bílé pozadí
-        text = font.render("MENU", True, BLACK)
-        screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - 100))
-        button_text = font.render("HRÁT", True, BLACK)
-        button_rect = button_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-        screen.blit(button_text, button_rect)
+        mouse_pos = pygame.mouse.get_pos()
+        button_rect_global = draw_menu_screen(screen, mouse_pos)
         
         # Zobrazení nápovědy ovládání
         draw_controls_help(screen, "menu")
 
     elif STATE == "playing":
-        # Kontrola časomíry
+        # NOVÉ: Kontrola časomíry
         time_left = get_time_left()
         if time_left <= 0:
             STATE = "game_over"
@@ -743,7 +1038,7 @@ while running:
         # Vykreslení oblasti pro sestavování
         assembly_zone = pygame.Rect(ASSEMBLY_CENTER[0] - 50, ASSEMBLY_CENTER[1] - 150, 100, 200)
         
-        # Design stejný jako u panelů ingrediencí
+        # UPRAVENO: Design stejný jako u panelů ingrediencí
         if assembly_error:
             if pygame.time.get_ticks() - error_timer < 3000:
                 if (pygame.time.get_ticks() - error_timer) // 300 % 2 == 0:
@@ -766,20 +1061,20 @@ while running:
         if assembly_error and pygame.time.get_ticks() - error_timer < 3000:
             assembly_title = small_font.render("CHYBNÁ OBJEDNÁVKA!", True, RED)
         else:
-            # Nový text a černá barva
+            # UPRAVENO: Nový text a černá barva
             assembly_title = small_font.render("SESTAV OBJEDNÁVKU", True, BLACK)
         screen.blit(assembly_title, (assembly_zone.centerx - assembly_title.get_width() // 2, assembly_zone.top - 25))
 
         for item in assembled_items:
-            # Žádné animace pro umístěné předměty
+            # UPRAVENO: Žádné animace pro umístěné předměty
             item.draw(screen)
 
-        # Vykreslení rozdělených panelů
+        # NOVÉ: Vykreslení rozdělených panelů
         draw_ingredient_panels(screen, drag_items)
 
         draw_buttons(screen, done_button, reset_button)
 
-        # Graficky zajímavé skóre a časomíra
+        # NOVÉ: Graficky zajímavé skóre a časomíra
         draw_score(screen, score)
         draw_timer(screen, time_left)
 
@@ -790,11 +1085,11 @@ while running:
             queue_text = small_font.render(f"Zákazníků ve frontě: {len(customer_queue)}", True, BLACK)
             screen.blit(queue_text, (20, 70))
         
-        # Zobrazení nápovědy ovládání
+        # NOVÉ: Zobrazení nápovědy ovládání
         draw_controls_help(screen, "playing")
     
     elif STATE == "game_over":
-        # Obrazovka s finálním skóre
+        # NOVÉ: Obrazovka s finálním skóre
         draw_final_score(screen, score)
 
     pygame.display.flip()
