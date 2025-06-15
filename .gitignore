@@ -1,0 +1,13 @@
+# Virtuální prostředí
+.venv/
+
+# Kompilované Python soubory
+__pycache__/
+*.pyc
+
+# Nastavení editoru
+.vscode/
+
+# Logy, dočasné soubory
+*.log
+*.tmp
