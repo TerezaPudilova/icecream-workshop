@@ -1011,56 +1011,125 @@ def draw_timer(surface, time_left):
     timer_x = timer_bg_rect.x + (timer_bg_rect.width - timer_text.get_width()) // 2
     surface.blit(timer_text, (timer_x, timer_bg_rect.y + 28))
 
-# NOVÉ: Funkce pro zobrazení finálního skóre
+# NOVÉ: Funkce pro zobrazení finálního skóre ve stylu menu
 def draw_final_score(surface, final_score):
-    # Pozadí pro finální skóre
-    overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 180))  # Průhledné černé pozadí
-    surface.blit(overlay, (0, 0))
+    """Vykreslí stylové finální okno se skóre v designu stejném jako menu"""
+    # UPRAVENO: Stejný gradient pozadí jako menu (růžové k žluté)
+    draw_gradient_background(surface, (255, 200, 220), (255, 240, 200))
     
-    # Hlavní panel s finálním skóre
-    panel_width, panel_height = 400, 300
+    # Plovoucí zmrzliny na pozadí nejsou v menu, takže je zde také nebudeme
+    
+    # Hlavní titulek "ČAS VYPRŠEL!"
+    title_font = pygame.font.SysFont("arial", 60, bold=True)
+    draw_fancy_title(surface, "ČAS VYPRŠEL!", title_font, 
+                    WIDTH // 2 - 220, HEIGHT // 2 - 180, 
+                    shadow_color=(80, 20, 20), main_color=(255, 150, 150))
+    
+    # Panel pro finální skóre ve stejném stylu jako tlačítka
+    panel_width, panel_height = 500, 200
     panel_rect = pygame.Rect((WIDTH - panel_width) // 2, (HEIGHT - panel_height) // 2, panel_width, panel_height)
-    pygame.draw.rect(surface, (30, 30, 60), panel_rect, border_radius=15)
-    pygame.draw.rect(surface, (100, 150, 255), panel_rect, 5, border_radius=15)
     
-    # Gradient efekt pro panel
-    for i in range(8):
-        alpha = 60 - i * 7
-        gradient_rect = pygame.Rect(panel_rect.x + i, panel_rect.y + i, 
-                                   panel_rect.width - 2*i, panel_rect.height - 2*i)
-        gradient_surface = pygame.Surface((gradient_rect.width, gradient_rect.height), pygame.SRCALPHA)
-        gradient_surface.fill((100, 150, 255, alpha))
-        surface.blit(gradient_surface, gradient_rect.topleft)
+    # Vykreslení fancy panelu (stejný styl jako tlačítka)
+    draw_fancy_panel(surface, panel_rect)
     
-    # Texty
-    title_font = pygame.font.SysFont("arial", 36, bold=True)
-    score_font = pygame.font.SysFont("arial", 48, bold=True)
-    instruction_font = pygame.font.SysFont("arial", 20)
+    # "FINÁLNÍ SKÓRE" - menší titulek
+    subtitle_font = pygame.font.SysFont("arial", 28, bold=True)
+    draw_fancy_title(surface, "FINÁLNÍ SKÓRE", subtitle_font,
+                    panel_rect.centerx - 120, panel_rect.y + 30,
+                    shadow_color=(40, 40, 100), main_color=(255, 220, 180))
     
-    # "ČAS VYPRŠEL!"
-    title_text = title_font.render("ČAS VYPRŠEL!", True, (255, 100, 100))
-    title_x = panel_rect.x + (panel_rect.width - title_text.get_width()) // 2
-    surface.blit(title_text, (title_x, panel_rect.y + 40))
+    # Samotné skóre - velké zlaté číslo
+    score_font = pygame.font.SysFont("arial", 72, bold=True)
+    draw_fancy_title(surface, str(final_score), score_font,
+                    panel_rect.centerx - 40, panel_rect.y + 80,
+                    shadow_color=(100, 70, 20), main_color=(255, 215, 100))
     
-    # "FINÁLNÍ SKÓRE"
-    final_title = instruction_font.render("FINÁLNÍ SKÓRE:", True, (200, 220, 255))
-    final_title_x = panel_rect.x + (panel_rect.width - final_title.get_width()) // 2
-    surface.blit(final_title, (final_title_x, panel_rect.y + 100))
+    # UPRAVENO: Tlačítka ve stejném stylu jako hlavní menu
+    button_font = pygame.font.SysFont("arial", 24, bold=True)
     
-    # Samotné skóre - velké číslo
-    score_text = score_font.render(str(final_score), True, (255, 255, 100))
-    score_x = panel_rect.x + (panel_rect.width - score_text.get_width()) // 2
-    surface.blit(score_text, (score_x, panel_rect.y + 130))
+    # UPRAVENO: Tlačítko "HRÁT" místo "NOVÁ HRA"
+    new_game_rect = pygame.Rect(WIDTH // 2 - 220, HEIGHT // 2 + 120, 150, 50)
+    mouse_pos = pygame.mouse.get_pos()
+    hover_new = new_game_rect.collidepoint(mouse_pos)
+    draw_fancy_button_no_shadow(surface, new_game_rect, "HRÁT", button_font, hover_new)
     
-    # Instrukce
-    instruction1 = instruction_font.render("Stiskněte Enter pro novou hru", True, (200, 220, 255))
-    instruction1_x = panel_rect.x + (panel_rect.width - instruction1.get_width()) // 2
-    surface.blit(instruction1, (instruction1_x, panel_rect.y + 210))
+    # UPRAVENO: Tlačítko "ZPĚT DO MENU" s větším paddingem (větší šířka)
+    menu_rect = pygame.Rect(WIDTH // 2 + 70, HEIGHT // 2 + 120, 200, 50)
+    hover_menu = menu_rect.collidepoint(mouse_pos)
+    draw_fancy_button_no_shadow(surface, menu_rect, "ZPĚT DO MENU", button_font, hover_menu)
     
-    instruction2 = instruction_font.render("nebo Escape pro návrat do menu", True, (200, 220, 255))
-    instruction2_x = panel_rect.x + (panel_rect.width - instruction2.get_width()) // 2
-    surface.blit(instruction2, (instruction2_x, panel_rect.y + 235))
+    # UPRAVENO: Dekorativní zmrzliny stejně jako v menu - jen po stranách tlačítek
+    if len(decoration_icecreams) >= 2:
+        # Jen po stranách tlačítek (jako v menu)
+        surface.blit(decoration_icecreams[0], (new_game_rect.left - 120, new_game_rect.centery - 60))
+        surface.blit(decoration_icecreams[1], (menu_rect.right + 40, menu_rect.centery - 60))
+    
+    # Stylové instrukce dole
+    instruction_font = pygame.font.SysFont("arial", 18)
+    instruction_text = "Použijte myš nebo klávesy Enter/Escape"
+    instruction_surface = instruction_font.render(instruction_text, True, (150, 100, 50))  # Stejná barva jako v menu
+    instruction_x = WIDTH // 2 - instruction_surface.get_width() // 2
+    surface.blit(instruction_surface, (instruction_x, HEIGHT - 40))
+    
+    return new_game_rect, menu_rect
+
+# NOVÉ: Funkce pro vykreslení fancy panelu (stejný styl jako tlačítka)
+def draw_fancy_panel(surface, rect):
+    """Vykreslí stylový panel ve stejném designu jako tlačítka"""
+    # Gradient barvy pro panel (tmavě modré k světle modrým)
+    color1 = (60, 80, 140)   # Tmavě modrá
+    color2 = (100, 120, 180) # Střední modrá
+    color3 = (140, 160, 220) # Světle modrá
+    border_color = (40, 60, 120)
+    
+    # Složitější gradient se třemi barvami
+    panel_surface = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
+    for y in range(rect.height):
+        if y < rect.height // 2:
+            # Horní polovina: color1 -> color2
+            ratio = y / (rect.height // 2)
+            r = int(color1[0] * (1 - ratio) + color2[0] * ratio)
+            g = int(color1[1] * (1 - ratio) + color2[1] * ratio)
+            b = int(color1[2] * (1 - ratio) + color2[2] * ratio)
+        else:
+            # Dolní polovina: color2 -> color3
+            ratio = (y - rect.height // 2) / (rect.height // 2)
+            r = int(color2[0] * (1 - ratio) + color3[0] * ratio)
+            g = int(color2[1] * (1 - ratio) + color3[1] * ratio)
+            b = int(color2[2] * (1 - ratio) + color3[2] * ratio)
+        pygame.draw.line(panel_surface, (r, g, b), (0, y), (rect.width, y))
+    
+    # Vnější rámeček
+    pygame.draw.rect(surface, border_color, rect, border_radius=20, width=5)
+    
+    # Vnitřní světlý rámeček
+    inner_border_rect = rect.copy()
+    inner_border_rect.inflate_ip(-10, -10)
+    pygame.draw.rect(surface, (200, 220, 255, 120), inner_border_rect, border_radius=15, width=3)
+    
+    # Aplikace gradientu s maskou pro zaoblené rohy
+    inner_rect = rect.copy()
+    inner_rect.inflate_ip(-5, -5)
+    
+    # Vytvoření masky pro zaoblené rohy
+    mask_surface = pygame.Surface((inner_rect.width, inner_rect.height), pygame.SRCALPHA)
+    pygame.draw.rect(mask_surface, (255, 255, 255, 255), (0, 0, inner_rect.width, inner_rect.height), border_radius=15)
+    
+    # Aplikace masky na gradient
+    panel_surface = pygame.transform.scale(panel_surface, (inner_rect.width, inner_rect.height))
+    for y in range(inner_rect.height):
+        for x in range(inner_rect.width):
+            if mask_surface.get_at((x, y))[3] > 0:  # Pokud je pixel v masce viditelný
+                surface.set_at((inner_rect.x + x, inner_rect.y + y), panel_surface.get_at((x, y)))
+    
+    # Světelný efekt nahoře
+    highlight_rect = pygame.Rect(rect.x + 15, rect.y + 12, rect.width - 30, 12)
+    highlight_surface = pygame.Surface((highlight_rect.width, highlight_rect.height), pygame.SRCALPHA)
+    for x in range(highlight_rect.width):
+        alpha = int(80 * (1 - abs(x - highlight_rect.width/2) / (highlight_rect.width/2)))
+        highlight_surface.set_at((x, 0), (255, 255, 255, alpha))
+        highlight_surface.set_at((x, 1), (255, 255, 255, alpha//2))
+    surface.blit(highlight_surface, highlight_rect.topleft)
 
 STATE = "intro"
 drag_items = []
@@ -1108,6 +1177,23 @@ while running:
                     initialize_game()
                     STATE = "playing"
                     add_new_customer()
+                    
+        elif STATE == "game_over":
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                # UPRAVENO: Aktualizované pozice tlačítek podle nového designu
+                mouse_pos = event.pos
+                # UPRAVENO: Pozice tlačítek podle nového layoutu
+                new_game_rect = pygame.Rect(WIDTH // 2 - 220, HEIGHT // 2 + 120, 150, 50)  # Tlačítko "HRÁT"
+                menu_rect = pygame.Rect(WIDTH // 2 + 70, HEIGHT // 2 + 120, 200, 50)  # Větší "ZPĚT DO MENU"
+                
+                if new_game_rect.collidepoint(mouse_pos):
+                    # UPRAVENO: Tlačítko "HRÁT" spustí hned novou hru
+                    initialize_game()
+                    STATE = "playing"
+                    add_new_customer()
+                elif menu_rect.collidepoint(mouse_pos):
+                    # UPRAVENO: Tlačítko "ZPĚT DO MENU" vede do menu
+                    return_to_menu()
                     
         elif STATE == "playing":
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -1202,8 +1288,8 @@ while running:
         draw_controls_help(screen, "playing")
     
     elif STATE == "game_over":
-        # NOVÉ: Obrazovka s finálním skóre - používá uložené final_score
-        draw_final_score(screen, final_score)
+        # NOVÉ: Stylové finální okno s interaktivními tlačítky
+        new_game_rect, menu_rect = draw_final_score(screen, final_score)
 
     pygame.display.flip()
 
