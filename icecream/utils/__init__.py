@@ -6,7 +6,6 @@ Pomocné funkce - načítání assetů, herní logika a správa stavu
 from .asset_loader import load_scoop_spritesheet, load_cone_spritesheet, load_icecream_decoration
 from .game_logic import *
 from .game_state import GameState
-from .path_helper import get_asset_path, check_asset_exists, list_assets_in_directory
 
 __all__ = [
     # Asset loader

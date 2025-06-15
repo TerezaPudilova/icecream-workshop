@@ -1,12 +1,11 @@
 import pygame
-from .path_helper import get_asset_path, check_asset_exists
+
 
 def load_icecream_decoration():
     """Načte obrázek zmrzlin a rozřeže ho na jednotlivé kornouty se zmrzlinou"""
     try:
         # OPRAVENO: Použití path_helper
-        image_path = get_asset_path("Icecream/icecream_uvod_2.png")
-        icecream_sheet = pygame.image.load(image_path).convert_alpha()
+        icecream_sheet = pygame.image.load("assets/Icecream/icecream_uvod_2.png").convert_alpha()
         
         sheet_width = icecream_sheet.get_width()
         sheet_height = icecream_sheet.get_height()
@@ -64,8 +63,7 @@ def load_scoop_spritesheet():
     """Načte spritesheet kopečků a extrahuje jednotlivé kopečky pomocí subsurface()"""
     try:
         # OPRAVENO: Použití path_helper
-        image_path = get_asset_path("Icecream/download.png")
-        spritesheet = pygame.image.load(image_path).convert_alpha()
+        spritesheet = pygame.image.load("assets/Icecream/download.png").convert_alpha()
         
         sheet_width = spritesheet.get_width()
         sheet_height = spritesheet.get_height()
@@ -132,8 +130,8 @@ def load_scoop_spritesheet():
         print("Nepodařilo se načíst spritesheet kopečků, používám záložní obrázky...")
         try:
             return {
-                'chocolate': pygame.image.load(get_asset_path("Icecream/cokoladova.png")).convert_alpha(),
-                'vanilla': pygame.image.load(get_asset_path("Icecream/smoulova.png")).convert_alpha()
+                'chocolate': pygame.image.load("assets/Icecream/cokoladova.png").convert_alpha(),
+                'vanilla': pygame.image.load("assets/Icecream/smoulova.png").convert_alpha()
             }
         except pygame.error:
             print("Nepodařilo se načíst ani záložní obrázky, používám placeholdery...")
@@ -151,8 +149,7 @@ def load_cone_spritesheet():
     """Načte spritesheet kornoutů pomocí subsurface()"""
     try:
         # OPRAVENO: Použití path_helper
-        image_path = get_asset_path("Icecream/cones.png")
-        spritesheet = pygame.image.load(image_path).convert_alpha()
+        spritesheet = pygame.image.load("assets/Icecream/cones.png").convert_alpha()
         
         sheet_width = spritesheet.get_width()
         sheet_height = spritesheet.get_height()
@@ -215,7 +212,7 @@ def load_cone_spritesheet():
         # Záložní načtení - vytvoříme více variant ze stejného obrázku
         # Záložní načtení - vytvoříme více variant ze stejného obrázku
         try:
-            cone_img = pygame.image.load(get_asset_path("Icecream/kornout.png")).convert_alpha()
+            cone_img = pygame.image.load("assets/Icecream/kornout.png").convert_alpha()
             return {
                 'classic': cone_img,
                 'waffle': cone_img,  # V budoucnu můžete přidat různé kornouty

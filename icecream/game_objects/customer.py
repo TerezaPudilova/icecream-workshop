@@ -1,12 +1,6 @@
 import pygame
 from .order import Order
-import os
 
-def get_customer_asset_path(relative_path):
-    """Helper pro získání cesty k customer assetům"""
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(current_dir)
-    return os.path.join(project_root, "assets", relative_path)
 
 class Customer(pygame.sprite.Sprite):
     spacing = 60
@@ -15,7 +9,7 @@ class Customer(pygame.sprite.Sprite):
         super().__init__()
         try:
             # OPRAVENO: Použití helper funkce
-            image_path = get_customer_asset_path("Customers/Customer1FF.png")
+            image_path = "assets/Customers/Customer1FF.png"
             self.image = pygame.image.load(image_path).convert_alpha()
         except pygame.error:
             print("Nepodařilo se načíst obrázek zákazníka, používám placeholder...")
